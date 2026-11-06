@@ -3,6 +3,10 @@ import Header, { THEMES } from './components/Header';
 import MetricsCards from './components/MetricsCards';
 import ThreeDTreeViewer from './components/ThreeDTreeViewer';
 import Tree2DViewer from './components/Tree2DViewer';
+import FileCompressor from './components/FileCompressor';
+import ChannelNoiseSimulator from './components/ChannelNoiseSimulator';
+import GraphTheoryAnalyzer from './components/GraphTheoryAnalyzer';
+import AdaptiveHuffmanSimulator from './components/AdaptiveHuffmanSimulator';
 import StepQueue from './components/StepQueue';
 import BitTracer from './components/BitTracer';
 import AlgorithmRace from './components/AlgorithmRace';
@@ -16,7 +20,6 @@ export default function App() {
   const [viewMode3D, setViewMode3D] = useState(true);
   const [activeTab, setActiveTab] = useState('simulator');
   const [inputText, setInputText] = useState(DEFAULT_SAMPLE);
-  const [modelGenerated, setModelGenerated] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [metrics, setMetrics] = useState(null);
@@ -40,7 +43,6 @@ export default function App() {
         if (data.presets) setPresets(data.presets);
       })
       .catch(() => {
-        // Fallback default presets
         setPresets({
           "sample_text": DEFAULT_SAMPLE
         });
@@ -69,10 +71,8 @@ export default function App() {
       setSfCodes(data.sfCodes);
       setFreqs(data.freqs);
       setSteps(data.steps);
-      setModelGenerated(true);
     } catch (err) {
       console.warn("API offline, computing client-side:", err);
-      // Client-side fallback computation
       clientSideCompress(text);
     } finally {
       setLoading(false);
@@ -143,16 +143,19 @@ export default function App() {
     setSfCodes(cMap);
     setFreqs(fMap);
     setSteps(stepsList);
-    setModelGenerated(true);
   };
 
   const tabs = [
     { id: 'simulator', label: '🌳 Visual Simulation Model' },
-    { id: 'queue', label: '🔄 Priority Queue (Min-Heap)' },
+    { id: 'compressor', label: '🗜️ Real File Compressor (.huff)' },
+    { id: 'noise', label: '💥 Channel Noise & Bit-Flip' },
+    { id: 'graphtheory', label: '📐 Graph Theory Topology' },
+    { id: 'adaptive', label: '🔄 Dynamic / Adaptive Huffman' },
+    { id: 'queue', label: '🔄 Min-Heap Step Queue' },
     { id: 'tracer', label: '⚡ Bitstream Tracer' },
     { id: 'race', label: '⚔️ Algorithm Race (Huffman vs Shannon-Fano)' },
-    { id: 'feeder', label: '💻 Code Feeder & Architecture' },
-    { id: 'benchmark', label: '📊 Experimental Benchmarks' }
+    { id: 'feeder', label: '💻 Code Feeder' },
+    { id: 'benchmark', label: '📊 Benchmarks' }
   ];
 
   return (
@@ -287,22 +290,42 @@ export default function App() {
         </>
       )}
 
-      {/* TAB 2: STEP BY STEP SIMULATOR */}
+      {/* FEATURE 2: REAL FILE COMPRESSOR & .HUFF EXPORTER */}
+      {activeTab === 'compressor' && (
+        <FileCompressor codes={codes} freqs={freqs} />
+      )}
+
+      {/* FEATURE 3: CHANNEL NOISE & BIT-FLIP SIMULATOR */}
+      {activeTab === 'noise' && (
+        <ChannelNoiseSimulator codes={codes} treeData={treeData} />
+      )}
+
+      {/* FEATURE 4: GRAPH THEORY INVARIANTS & TOPOLOGY */}
+      {activeTab === 'graphtheory' && (
+        <GraphTheoryAnalyzer treeData={treeData} />
+      )}
+
+      {/* FEATURE 6: ADAPTIVE / DYNAMIC HUFFMAN SIMULATOR */}
+      {activeTab === 'adaptive' && (
+        <AdaptiveHuffmanSimulator />
+      )}
+
+      {/* TAB: STEP BY STEP MIN-HEAP SIMULATOR */}
       {activeTab === 'queue' && (
         <StepQueue steps={steps} />
       )}
 
-      {/* TAB 3: BITSTREAM TRACER */}
+      {/* TAB: BITSTREAM TRACER */}
       {activeTab === 'tracer' && (
         <BitTracer codes={codes} treeData={treeData} />
       )}
 
-      {/* TAB 4: ALGORITHM RACE */}
+      {/* TAB: ALGORITHM RACE */}
       {activeTab === 'race' && (
         <AlgorithmRace codes={codes} sfCodes={sfCodes} freqs={freqs} />
       )}
 
-      {/* TAB 5: CODE FEEDER */}
+      {/* TAB: CODE FEEDER */}
       {activeTab === 'feeder' && (
         <CodeFeeder 
           presets={presets} 
@@ -314,7 +337,7 @@ export default function App() {
         />
       )}
 
-      {/* TAB 6: BENCHMARKS */}
+      {/* TAB: BENCHMARKS */}
       {activeTab === 'benchmark' && (
         <BenchmarkView />
       )}
