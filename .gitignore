@@ -28,6 +28,11 @@ wheels/
 .coverage
 htmlcov/
 
+# Node & Frontend
+node_modules/
+.npm/
+graphify-out/
+
 # OS & Editor
 .DS_Store
 Thumbs.db

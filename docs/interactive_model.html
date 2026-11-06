@@ -3,10 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interactive Huffman Coding Visual Simulation Model - DMGT Topic 14</title>
+  <title>Interactive 3D Huffman Coding Visual Simulation Model - DMGT Topic 14</title>
+
+  <!-- Modern Google Fonts: Syne, Outfit, Plus Jakarta Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
   <style>
-    /* High-Tech Dark Mode (Default) & Light Theme Styles */
+    /* High-Tech 5-Theme Engine & Cyberpunk Textures */
     :root {
+      --font-display: 'Syne', sans-serif;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
       --navy: #38BDF8;
       --blue: #2563EB;
       --accent: #F97316;
@@ -30,7 +41,85 @@
       --chip-border: #334155;
     }
 
-    body.light-theme {
+    body.theme-synthwave {
+      --navy: #38BDF8;
+      --blue: #818CF8;
+      --accent: #F43F5E;
+      --green: #34D399;
+      --bg: #0C0817;
+      --card-bg: rgba(26, 16, 48, 0.8);
+      --card-sub: rgba(20, 12, 38, 0.88);
+      --border: rgba(244, 63, 94, 0.25);
+      --text: #FFF1F2;
+      --text-muted: #FDA4AF;
+      --eth: #C084FC;
+      --glow-gold: #FBBF24;
+      --glow-cyan: #38BDF8;
+      --svg-bg: #080510;
+      --table-header: #2E1065;
+      --table-row-even: #150A28;
+      --table-row-odd: #1C0D35;
+      --input-bg: #120B24;
+      --input-border: #3B1668;
+      --chip-bg: #2E1065;
+      --chip-border: #4C1D95;
+      --grid-line: rgba(244, 63, 94, 0.05);
+      --card-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.6), 0 0 24px -2px rgba(244, 63, 94, 0.18);
+    }
+
+    body.theme-nord {
+      --navy: #38BDF8;
+      --blue: #60A5FA;
+      --accent: #F87171;
+      --green: #2DD4BF;
+      --bg: #0F172A;
+      --card-bg: rgba(30, 41, 59, 0.8);
+      --card-sub: rgba(23, 32, 48, 0.88);
+      --border: rgba(56, 189, 248, 0.2);
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --eth: #818CF8;
+      --glow-gold: #FCD34D;
+      --glow-cyan: #38BDF8;
+      --svg-bg: #0A0F1D;
+      --table-header: #1E293B;
+      --table-row-even: #131D33;
+      --table-row-odd: #19243E;
+      --input-bg: #0F172A;
+      --input-border: #334155;
+      --chip-bg: #1E293B;
+      --chip-border: #334155;
+      --grid-line: rgba(56, 189, 248, 0.04);
+      --card-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.5), 0 0 20px -2px rgba(45, 212, 191, 0.15);
+    }
+
+    body.theme-luxury {
+      --navy: #67E8F9;
+      --blue: #F59E0B;
+      --accent: #F59E0B;
+      --green: #10B981;
+      --bg: #09090B;
+      --card-bg: rgba(24, 24, 27, 0.85);
+      --card-sub: rgba(18, 18, 20, 0.9);
+      --border: rgba(245, 158, 11, 0.25);
+      --text: #FAFAFA;
+      --text-muted: #D4D4D8;
+      --eth: #A78BFA;
+      --glow-gold: #F59E0B;
+      --glow-cyan: #67E8F9;
+      --svg-bg: #050507;
+      --table-header: #27272A;
+      --table-row-even: #101014;
+      --table-row-odd: #17171C;
+      --input-bg: #121216;
+      --input-border: #3F3F46;
+      --chip-bg: #27272A;
+      --chip-border: #3F3F46;
+      --grid-line: rgba(245, 158, 11, 0.04);
+      --card-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.6), 0 0 24px -2px rgba(245, 158, 11, 0.16);
+    }
+
+    body.theme-academic, body.light-theme {
       --navy: #102C57;
       --blue: #1F4E78;
       --accent: #E6550D;
@@ -56,12 +145,24 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
+      font-family: var(--font-body, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      background-color: var(--bg);
       color: var(--text);
-      line-height: 1.5;
+      line-height: 1.55;
       padding-bottom: 50px;
-      transition: background 0.3s ease, color 0.3s ease;
+      position: relative;
+      transition: background 0.35s ease, color 0.35s ease;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image: 
+        linear-gradient(var(--grid-line, rgba(56, 189, 248, 0.04)) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line, rgba(56, 189, 248, 0.04)) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
     }
     header {
       background: linear-gradient(135deg, #090D16 0%, #111A2E 100%);
@@ -85,10 +186,14 @@
       gap: 15px;
     }
     .header-title h1 {
-      font-size: 1.55rem;
-      font-weight: 700;
+      font-family: var(--font-display, sans-serif);
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
       margin-bottom: 4px;
-      color: #FFFFFF;
+      background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 50%, #8B5CF6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     .header-title p {
       font-size: 0.9rem;
@@ -543,10 +648,20 @@
         <h1>Optimal Prefix Codes & Algorithm Race Simulation Model</h1>
         <p>DMGT Topic 14 • B.Tech CSE • Faculty Evaluator: Dr. Priya Satish</p>
       </div>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <button class="btn btn-sm btn-outline" id="theme-toggle-btn" onclick="toggleTheme()" style="color: #F0AD4E; border-color: #F0AD4E;">
-          🌙 Dark Mode
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <button class="btn btn-sm btn-outline" id="btn-header-3d" onclick="toggle3DViewMode()" style="color: var(--navy); border-color: var(--navy); font-weight: bold;">
+          🌌 3D Spatial Tree
         </button>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <label style="font-size: 0.82rem; color: #94A3B8; font-weight: 600;">Theme:</label>
+          <select id="theme-selector-dropdown" onchange="applyTheme(this.value)" style="background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+            <option value="midnight" selected>🌌 Midnight Cyber</option>
+            <option value="synthwave">🌇 Sunset Synthwave</option>
+            <option value="nord">❄️ Nord Arctic Frost</option>
+            <option value="luxury">👑 Obsidian Gold</option>
+            <option value="academic">☀️ Academic Light</option>
+          </select>
+        </div>
         <div class="header-badge">
           <strong>Team Topic 14:</strong><br>
           Nikhil • Piyush • Sakshi • Arushi • Harsh • Khyathi
@@ -673,6 +788,7 @@
           <span>🌳 Rooted Binary Prefix Code Tree Visualization</span>
           <div id="tree-action-buttons" style="display: none; gap: 8px; align-items: center; flex-wrap: wrap;">
             <span class="badge badge-pass" id="tree-stats-badge">80 Leaves • Max Depth: 14</span>
+            <button class="btn btn-sm btn-outline" id="btn-toggle-3d-view" onclick="toggle3DViewMode()" style="color: var(--navy); border-color: var(--navy); font-weight: bold;">🌌 Switch to 3D Spatial Tree</button>
             <button class="btn btn-sm btn-outline" onclick="replayTreeAnimation()">▶ Replay Animation</button>
             <button class="btn btn-sm btn-outline" onclick="animateRandomSignal()">✨ Trace Random Symbol</button>
             <button class="btn btn-sm btn-outline" onclick="zoomInTree()">🔍 Zoom In (+)</button>
@@ -728,6 +844,23 @@
             <svg id="tree-svg">
               <g id="tree-viewport"></g>
             </svg>
+          </div>
+
+          <!-- 3D Three.js Spatial Tree Container -->
+          <div id="tree-3d-wrapper" style="display: none; position: relative; width: 100%; height: 580px; border-radius: 12px; overflow: hidden; background: radial-gradient(circle at 50% 50%, #0A1224 0%, #050811 100%); border: 1px solid var(--border); box-shadow: inset 0 0 40px rgba(0, 242, 254, 0.08); margin-top: 10px;">
+            <div id="threejs-canvas-mount" style="width: 100%; height: 100%;"></div>
+            <div style="position: absolute; top: 16px; left: 16px; display: flex; gap: 8px; z-index: 10;">
+              <button class="badge" id="btn-3d-rotate" onclick="toggle3DAutoRotate()" style="background: rgba(0, 242, 254, 0.2); color: var(--navy); border: 1px solid var(--border); cursor: pointer; padding: 6px 14px;">
+                ⏸ Pause Auto-Rotation
+              </button>
+              <button class="badge badge-pass" onclick="pulse3DPackets()" style="cursor: pointer; padding: 6px 14px;">
+                ✨ Pulse Signal Packets
+              </button>
+            </div>
+            <div style="position: absolute; bottom: 16px; left: 16px; font-size: 0.82rem; color: var(--text-muted); background: rgba(10, 15, 29, 0.75); backdrop-filter: blur(8px); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); z-index: 10;">
+              🖱️ <strong>3D Controls:</strong> Left Click + Drag to Orbit • Scroll to Zoom • Hover Node to Inspect
+            </div>
+            <div id="three-hover-hud" style="display: none; position: absolute; top: 16px; right: 16px; background: rgba(13, 19, 34, 0.92); backdrop-filter: blur(16px); border: 1px solid var(--navy); border-radius: 10px; padding: 14px 18px; box-shadow: 0 8px 30px rgba(0, 242, 254, 0.25); min-width: 220px; z-index: 20;"></div>
           </div>
         </div>
       </div>
@@ -983,24 +1116,246 @@
   </div>
 
   <script>
-    // Theme Switcher Logic
-    let isDark = true;
-    function toggleTheme() {
-      isDark = !isDark;
-      if (isDark) {
-        document.body.classList.remove('light-theme');
-        document.getElementById('theme-toggle-btn').innerHTML = '🌙 Dark Mode';
-        document.getElementById('theme-toggle-btn').style.color = '#F0AD4E';
-        document.getElementById('theme-toggle-btn').style.borderColor = '#F0AD4E';
-      } else {
+    // Multi-Theme Engine Logic
+    function applyTheme(themeKey) {
+      document.body.className = '';
+      if (themeKey === 'synthwave') {
+        document.body.classList.add('theme-synthwave');
+      } else if (themeKey === 'nord') {
+        document.body.classList.add('theme-nord');
+      } else if (themeKey === 'luxury') {
+        document.body.classList.add('theme-luxury');
+      } else if (themeKey === 'academic') {
+        document.body.classList.add('theme-academic');
         document.body.classList.add('light-theme');
-        document.getElementById('theme-toggle-btn').innerHTML = '☀️ Light Mode';
-        document.getElementById('theme-toggle-btn').style.color = '#102C57';
-        document.getElementById('theme-toggle-btn').style.borderColor = '#102C57';
       }
+      const dropdown = document.getElementById('theme-selector-dropdown');
+      if (dropdown && dropdown.value !== themeKey) dropdown.value = themeKey;
+
       if (currentTreeRoot) {
         renderTreeSVG(currentTreeRoot, false);
+        if (is3DMode) renderTree3D(currentTreeRoot);
       }
+    }
+
+    // 3D Spatial Tree Engine (Three.js)
+    let is3DMode = false;
+    let threeScene, threeCamera, threeRenderer, threeParticles, threeTreeGroup;
+    let threeSpheres = [];
+    let threePackets = [];
+    let is3DAutoRotate = true;
+    let threeAnimId = null;
+
+    function toggle3DViewMode() {
+      is3DMode = !is3DMode;
+      const svgCont = document.getElementById('tree-svg-container');
+      const threeCont = document.getElementById('tree-3d-wrapper');
+      const toggleBtn = document.getElementById('btn-toggle-3d-view');
+      const headerBtn = document.getElementById('btn-header-3d');
+
+      if (is3DMode) {
+        svgCont.style.display = 'none';
+        threeCont.style.display = 'block';
+        if (toggleBtn) toggleBtn.innerHTML = '🌳 Switch to 2D Planar SVG';
+        if (headerBtn) headerBtn.innerHTML = '🌳 2D Planar Tree';
+        if (currentTreeRoot) renderTree3D(currentTreeRoot);
+      } else {
+        svgCont.style.display = 'block';
+        threeCont.style.display = 'none';
+        if (toggleBtn) toggleBtn.innerHTML = '🌌 Switch to 3D Spatial Tree';
+        if (headerBtn) headerBtn.innerHTML = '🌌 3D Spatial Tree';
+      }
+    }
+
+    function toggle3DAutoRotate() {
+      is3DAutoRotate = !is3DAutoRotate;
+      const btn = document.getElementById('btn-3d-rotate');
+      if (btn) btn.innerHTML = is3DAutoRotate ? '⏸ Pause Auto-Rotation' : '▶ Enable Orbit Rotation';
+    }
+
+    function pulse3DPackets() {
+      for (let p of threePackets) {
+        p.progress = 0;
+      }
+    }
+
+    function renderTree3D(root) {
+      if (!window.THREE) return;
+      const mount = document.getElementById('threejs-canvas-mount');
+      if (!mount) return;
+
+      if (threeAnimId) cancelAnimationFrame(threeAnimId);
+      mount.innerHTML = '';
+      threeSpheres = [];
+      threePackets = [];
+
+      const width = mount.clientWidth || 900;
+      const height = 580;
+
+      threeScene = new THREE.Scene();
+      threeCamera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+      threeCamera.position.set(0, 5, 28);
+
+      threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      threeRenderer.setSize(width, height);
+      threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      mount.appendChild(threeRenderer.domElement);
+
+      // Lights
+      const amb = new THREE.AmbientLight(0xffffff, 0.7);
+      threeScene.add(amb);
+      const dir1 = new THREE.DirectionalLight(0x00F2FE, 2.0);
+      dir1.position.set(20, 30, 20);
+      threeScene.add(dir1);
+      const dir2 = new THREE.DirectionalLight(0x8B5CF6, 1.8);
+      dir2.position.set(-20, -10, -20);
+      threeScene.add(dir2);
+
+      // Starfield Particles
+      const pCount = 700;
+      const pGeo = new THREE.BufferGeometry();
+      const pPos = new Float32Array(pCount * 3);
+      for (let i = 0; i < pCount * 3; i += 3) {
+        pPos[i] = (Math.random() - 0.5) * 80;
+        pPos[i + 1] = (Math.random() - 0.5) * 60;
+        pPos[i + 2] = (Math.random() - 0.5) * 80;
+      }
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+      const pMat = new THREE.PointsMaterial({ color: 0x38BDF8, size: 0.35, transparent: true, opacity: 0.65 });
+      threeParticles = new THREE.Points(pGeo, pMat);
+      threeScene.add(threeParticles);
+
+      threeTreeGroup = new THREE.Group();
+      threeScene.add(threeTreeGroup);
+
+      // Layout 3D nodes
+      function layout(node, depth = 0, x = 0, z = 0, spreadX = 8, spreadZ = 5) {
+        if (!node) return null;
+        const y = 10 - depth * 3.5;
+        const nodeObj = { data: node, pos: new THREE.Vector3(x, y, z), depth, children: [] };
+        const nextX = Math.max(spreadX * 0.55, 1.2);
+        const nextZ = Math.max(spreadZ * 0.6, 0.8);
+        if (node.left) {
+          nodeObj.children.push({ child: layout(node.left, depth + 1, x - nextX, z + (depth % 2 === 0 ? nextZ : -nextZ), nextX, nextZ), bit: '0' });
+        }
+        if (node.right) {
+          nodeObj.children.push({ child: layout(node.right, depth + 1, x + nextX, z - (depth % 2 === 0 ? nextZ : -nextZ), nextX, nextZ), bit: '1' });
+        }
+        return nodeObj;
+      }
+
+      const root3D = layout(root);
+
+      const sphereGeo = new THREE.SphereGeometry(0.55, 24, 24);
+      const leafGeo = new THREE.SphereGeometry(0.65, 24, 24);
+      const intMat = new THREE.MeshStandardMaterial({ color: 0x0284C7, emissive: 0x00F2FE, emissiveIntensity: 0.6, roughness: 0.2, metalness: 0.8 });
+      const leafMat = new THREE.MeshStandardMaterial({ color: 0x059669, emissive: 0x10B981, emissiveIntensity: 0.7, roughness: 0.15, metalness: 0.7 });
+
+      function drawBranch(n) {
+        if (!n) return;
+        const isLeaf = n.data.char !== null;
+        const mesh = new THREE.Mesh(isLeaf ? leafGeo : sphereGeo, isLeaf ? leafMat : intMat);
+        mesh.position.copy(n.pos);
+        mesh.userData = { char: n.data.char, freq: n.data.freq, depth: n.depth, isLeaf, code: currentCodes[n.data.char] || '' };
+        threeTreeGroup.add(mesh);
+        threeSpheres.push(mesh);
+
+        for (let c of n.children) {
+          if (!c.child) continue;
+          const p1 = n.pos;
+          const p2 = c.child.pos;
+          const dist = p1.distanceTo(p2);
+          const cylGeo = new THREE.CylinderGeometry(0.06, 0.06, dist, 12);
+          const cylMat = new THREE.MeshStandardMaterial({
+            color: c.bit === '0' ? 0x00F2FE : 0xF43F5E,
+            emissive: c.bit === '0' ? 0x00F2FE : 0xF43F5E,
+            emissiveIntensity: 0.45,
+            transparent: true,
+            opacity: 0.75
+          });
+          const cyl = new THREE.Mesh(cylGeo, cylMat);
+          const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+          cyl.position.copy(mid);
+          const orientation = new THREE.Matrix4();
+          orientation.lookAt(p1, p2, new THREE.Vector3(0, 1, 0));
+          orientation.multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+          cyl.applyMatrix4(orientation);
+          threeTreeGroup.add(cyl);
+
+          // Photon packet
+          const pkt = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), new THREE.MeshBasicMaterial({ color: 0xFFFFFF }));
+          threeTreeGroup.add(pkt);
+          threePackets.push({ mesh: pkt, start: p1, end: p2, progress: Math.random(), speed: 0.008 + Math.random() * 0.008 });
+
+          drawBranch(c.child);
+        }
+      }
+
+      drawBranch(root3D);
+      threeTreeGroup.position.set(0, -2, 0);
+
+      // Mouse drag rotation & raycaster
+      let isDragging = false;
+      let prevMouse = { x: 0, y: 0 };
+      let rotX = 0, rotY = 0;
+      const dom = threeRenderer.domElement;
+
+      dom.onmousedown = (e) => { isDragging = true; prevMouse = { x: e.clientX, y: e.clientY }; };
+      window.onmousemove = (e) => {
+        if (isDragging) {
+          rotY += (e.clientX - prevMouse.x) * 0.008;
+          rotX += (e.clientY - prevMouse.y) * 0.008;
+          rotX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, rotX));
+          prevMouse = { x: e.clientX, y: e.clientY };
+        }
+        // Hover inspection
+        const rect = dom.getBoundingClientRect();
+        const m = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+        const ray = new THREE.Raycaster();
+        ray.setFromCamera(m, threeCamera);
+        const hits = ray.intersectObjects(threeSpheres);
+        const hud = document.getElementById('three-hover-hud');
+        if (hits.length > 0 && hud) {
+          const u = hits[0].object.userData;
+          hud.style.display = 'block';
+          hud.innerHTML = u.isLeaf ? 
+            `<div style="font-size:0.82rem;color:var(--text-muted);">🍃 Leaf Symbol</div>
+             <div style="font-size:1.3rem;font-weight:bold;color:var(--green);font-family:monospace;">'${u.char}'</div>
+             <div style="font-size:0.85rem;margin-top:4px;">Frequency: <strong>${u.freq}</strong></div>
+             <div style="font-size:0.85rem;">Code: <strong style="color:var(--navy);font-family:monospace;">${u.code}</strong> (${u.code.length}b)</div>` :
+            `<div style="font-size:0.82rem;color:var(--text-muted);">🔄 Internal Merge Vertex</div>
+             <div style="font-size:1.2rem;font-weight:bold;color:var(--navy);">Weight: ${u.freq}</div>
+             <div style="font-size:0.85rem;color:var(--text-muted);">Depth: ${u.depth}</div>`;
+          dom.style.cursor = 'pointer';
+        } else if (hud) {
+          hud.style.display = 'none';
+          dom.style.cursor = 'grab';
+        }
+      };
+      window.onmouseup = () => { isDragging = false; };
+      dom.onwheel = (e) => {
+        threeCamera.position.z += e.deltaY * 0.03;
+        threeCamera.position.z = Math.max(10, Math.min(60, threeCamera.position.z));
+      };
+
+      function loop() {
+        threeAnimId = requestAnimationFrame(loop);
+        if (threeParticles) threeParticles.rotation.y += 0.0006;
+        if (is3DAutoRotate && !isDragging && threeTreeGroup) {
+          rotY += 0.003;
+        }
+        if (threeTreeGroup) {
+          threeTreeGroup.rotation.y = rotY;
+          threeTreeGroup.rotation.x = rotX;
+        }
+        for (let p of threePackets) {
+          p.progress += p.speed;
+          if (p.progress > 1) p.progress = 0;
+          p.mesh.position.lerpVectors(p.start, p.end, p.progress);
+        }
+        threeRenderer.render(threeScene, threeCamera);
+      }
+      loop();
     }
 
     // Tab switching
@@ -1257,6 +1612,7 @@
 
       // 6. Render Rooted Binary Tree with Cascading Assembly Animation
       renderTreeSVG(currentTreeRoot, true);
+      if (is3DMode) renderTree3D(currentTreeRoot);
 
       // 7. Update Step Simulator & Bitstream Tracer
       currentStepIdx = 0;
