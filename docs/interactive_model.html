@@ -266,6 +266,99 @@
     .card:hover {
       box-shadow: 0 4px 18px rgba(0,0,0,0.25);
     }
+    /* Ambient Cursor Spotlight */
+    .ambient-spotlight {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(
+        650px circle at var(--mouse-x, 50vw) var(--mouse-y, 50vh),
+        rgba(0, 242, 254, 0.06),
+        transparent 70%
+      );
+      transition: opacity 0.3s ease;
+    }
+    /* Interactive 3D Card Sheen */
+    .interactive-tilt {
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+      transform-style: preserve-3d;
+    }
+    .interactive-tilt::after {
+      content: "";
+      position: absolute;
+      top: var(--sheen-y, -100%);
+      left: var(--sheen-x, -100%);
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.12) 0%, rgba(139, 92, 246, 0.05) 50%, transparent 70%);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .interactive-tilt:hover::after {
+      opacity: 1;
+    }
+    /* Quick Preset Chips */
+    .preset-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .preset-chip:hover {
+      background: rgba(0, 242, 254, 0.15);
+      border-color: var(--navy);
+      color: var(--navy);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 242, 254, 0.2);
+    }
+    /* Live Character Tokens */
+    .char-token {
+      display: inline;
+      padding: 1px 2px;
+      border-radius: 3px;
+      transition: all 0.12s ease;
+      cursor: pointer;
+    }
+    .char-token.highlighted {
+      background: rgba(0, 242, 254, 0.45);
+      color: #FFFFFF;
+      font-weight: 800;
+      box-shadow: 0 0 8px rgba(0, 242, 254, 0.6);
+    }
+    .bit-token-block {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      margin: 2px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--navy);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .bit-token-block.highlighted {
+      background: rgba(0, 242, 254, 0.35);
+      border-color: var(--navy);
+      color: #FFF;
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
+    }
     .card-title {
       font-size: 1.15rem;
       font-weight: 700;
@@ -639,6 +732,8 @@
   </style>
 </head>
 <body>
+  <div class="ambient-spotlight"></div>
+  <canvas id="confetti-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999;"></canvas>
 
   <header>
     <div class="header-content">
@@ -650,6 +745,9 @@
         <p>DMGT Topic 14 • B.Tech CSE • Faculty Evaluator: Dr. Priya Satish</p>
       </div>
       <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <button class="btn btn-sm btn-outline" id="btn-header-sound" onclick="toggleSoundEngine()" style="color: var(--green); border-color: var(--green); font-weight: bold;">
+          🔊 Sound FX: ON
+        </button>
         <button class="btn btn-sm btn-outline" id="btn-header-3d" onclick="toggle3DViewMode()" style="color: var(--navy); border-color: var(--navy); font-weight: bold;">
           🌌 3D Spatial Tree
         </button>
@@ -711,8 +809,24 @@
             <option value="custom">-- Custom Text Input --</option>
           </select>
 
+          <!-- Quick Inspiration Preset Chips -->
+          <div style="display: flex; gap: 8px; margin-top: 4px; margin-bottom: 10px; flex-wrap: wrap; align-items: center;">
+            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">Quick Presets:</span>
+            <button type="button" class="preset-chip" onclick="applyQuickPreset('topic14')">🚀 Topic 14 Official</button>
+            <button type="button" class="preset-chip" onclick="applyQuickPreset('hamlet')">📜 Shakespeare Hamlet</button>
+            <button type="button" class="preset-chip" onclick="applyQuickPreset('dna')">🧬 DNA Helix (ACTG)</button>
+            <button type="button" class="preset-chip" onclick="applyQuickPreset('skewed')">⚡ Skewed Power-Law</button>
+            <button type="button" class="preset-chip" onclick="applyQuickPreset('json')">🌐 JSON Data Packet</button>
+          </div>
+
           <label style="font-weight: 600; font-size: 0.9rem;">Source Content:</label>
           <textarea id="input-text" rows="7" placeholder="Type or paste any text to compress..."></textarea>
+
+          <!-- Interactive Text Character Highlighter -->
+          <div id="interactive-text-inspector" style="margin-top: 8px; margin-bottom: 12px; padding: 10px 14px; background: var(--card-sub); border: 1px solid var(--border); border-radius: 6px; font-family: monospace; font-size: 0.85rem; max-height: 110px; overflow-y: auto; display: none;">
+            <div style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 4px;">Interactive Character Highlighter (Hover symbol chips below to illuminate):</div>
+            <div id="text-token-stream"></div>
+          </div>
 
           <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
             <button class="btn btn-green pulse-glow" id="btn-compress-main" onclick="runCompression()" style="font-size: 1rem; padding: 11px 22px;">
@@ -784,6 +898,60 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Interactive Symbol Frequency & Shannon Information Cloud -->
+      <div class="card" id="symbol-cloud-card" style="display: none; margin-bottom: 20px;">
+        <div class="card-title">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>🧬 Interactive Symbol Frequency & Shannon Information Cloud</span>
+            <span class="badge badge-pass" id="badge-unique-symbols">0 Unique Symbols</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <input type="text" id="symbol-search-input" placeholder="🔍 Filter symbol or code..." oninput="filterSymbolCloud()" style="width: 170px; margin: 0; padding: 5px 10px; font-size: 0.82rem;">
+            <div style="display: flex; background: var(--card-sub); border: 1px solid var(--border); border-radius: 6px; padding: 2px;">
+              <button type="button" class="btn btn-sm" id="btn-sort-freq" onclick="sortSymbolCloud('freq')" style="padding: 3px 8px; font-size: 0.78rem; background: var(--navy); color: #000;">Freq</button>
+              <button type="button" class="btn btn-sm btn-outline" id="btn-sort-len" onclick="sortSymbolCloud('len')" style="padding: 3px 8px; font-size: 0.78rem;">Bit Len</button>
+              <button type="button" class="btn btn-sm btn-outline" id="btn-sort-alpha" onclick="sortSymbolCloud('alpha')" style="padding: 3px 8px; font-size: 0.78rem;">A-Z</button>
+            </div>
+          </div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+          Hover or click any symbol chip to hear its frequency audio tone, illuminate matching characters in the text, and inspect self-information \(I(s_i) = -\log_2(p_i)\).
+        </p>
+
+        <!-- Chips Container -->
+        <div id="symbol-chips-container" style="display: flex; flex-wrap: wrap; gap: 8px; max-height: 220px; overflow-y: auto; padding: 10px; background: var(--card-sub); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 14px;">
+        </div>
+
+        <!-- Selected Symbol Deep Inspector -->
+        <div id="symbol-deep-inspector" style="background: var(--card-bg); border: 1px solid var(--navy); border-radius: 8px; padding: 16px; display: none;">
+        </div>
+      </div>
+
+      <!-- Interactive Compressed Bitstream Inspector -->
+      <div class="card" id="bitstream-inspector-card" style="display: none; margin-bottom: 20px;">
+        <div class="card-title">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>⚡ Interactive Compressed Bitstream Inspector</span>
+            <span class="badge badge-pass" id="badge-bitstream-len">0 Bits</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; background: var(--card-sub); border: 1px solid var(--border); border-radius: 6px; padding: 2px;">
+              <button type="button" class="btn btn-sm" id="btn-stream-tokens" onclick="setBitstreamViewMode('tokens')" style="padding: 3px 10px; font-size: 0.78rem; background: var(--navy); color: #000;">Token Packets</button>
+              <button type="button" class="btn btn-sm btn-outline" id="btn-stream-raw" onclick="setBitstreamViewMode('raw')" style="padding: 3px 10px; font-size: 0.78rem;">Raw Binary</button>
+              <button type="button" class="btn btn-sm btn-outline" id="btn-stream-hex" onclick="setBitstreamViewMode('hex')" style="padding: 3px 10px; font-size: 0.78rem;">Hex Dump</button>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="copyBitstreamToClipboard()">📋 Copy Bits</button>
+          </div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+          Unambiguous variable-length binary sequence. Hover any packet to trace its source character and play bit traversal frequencies.
+        </p>
+        <div id="bitstream-content-box" style="background: var(--card-sub); border: 1px solid var(--border); border-radius: 8px; padding: 14px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.88rem; line-height: 1.8;">
+        </div>
+        <div id="bitstream-summary-bar" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.82rem; color: var(--text-muted);">
         </div>
       </div>
 
@@ -1385,6 +1553,556 @@
   </div>
 
   <script>
+    // High-Tech Web Audio API Sound FX Engine
+    let audioCtx = null;
+    let isSoundEnabled = true;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    const SoundEngine = {
+      isEnabled: () => isSoundEnabled,
+      toggle: () => {
+        isSoundEnabled = !isSoundEnabled;
+        const btn = document.getElementById('btn-header-sound');
+        if (btn) {
+          btn.innerText = isSoundEnabled ? '🔊 Sound FX: ON' : '🔇 Sound FX: OFF';
+          btn.style.color = isSoundEnabled ? 'var(--green)' : 'var(--text-muted)';
+          btn.style.borderColor = isSoundEnabled ? 'var(--green)' : 'var(--border)';
+        }
+        if (isSoundEnabled) SoundEngine.playSuccess();
+        return isSoundEnabled;
+      },
+      playClick: () => {
+        if (!isSoundEnabled) return;
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1400, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.04);
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.04);
+        } catch(e) {}
+      },
+      playBit: (bit) => {
+        if (!isSoundEnabled) return;
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const freq = bit === '1' ? 880 : 440;
+          osc.type = bit === '1' ? 'sine' : 'triangle';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          gain.gain.setValueAtTime(0.06, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.07);
+        } catch(e) {}
+      },
+      playTone: (freq = 600, duration = 0.08) => {
+        if (!isSoundEnabled) return;
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(Math.max(120, Math.min(2400, freq)), ctx.currentTime);
+          gain.gain.setValueAtTime(0.05, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        } catch(e) {}
+      },
+      playLeafChime: () => {
+        if (!isSoundEnabled) return;
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const baseFreq = 523.25;
+          [baseFreq, baseFreq * 1.25, baseFreq * 1.5].forEach((f, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, ctx.currentTime + i * 0.02);
+            gain.gain.setValueAtTime(0.04, ctx.currentTime + i * 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35 + i * 0.02);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + i * 0.02);
+            osc.stop(ctx.currentTime + 0.35 + i * 0.02);
+          });
+        } catch(e) {}
+      },
+      playSuccess: () => {
+        if (!isSoundEnabled) return;
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          [523.25, 659.25, 783.99, 1046.50].forEach((n, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(n, ctx.currentTime + i * 0.07);
+            gain.gain.setValueAtTime(0.07, ctx.currentTime + i * 0.07);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.07 + 0.22);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + i * 0.07);
+            osc.stop(ctx.currentTime + i * 0.07 + 0.22);
+          });
+        } catch(e) {}
+      },
+      playGlitch: () => {
+        if (!isSoundEnabled) return;
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, ctx.currentTime);
+          osc.frequency.setValueAtTime(110, ctx.currentTime + 0.05);
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.12);
+        } catch(e) {}
+      }
+    };
+
+    function toggleSoundEngine() {
+      SoundEngine.toggle();
+    }
+
+    // Ambient Cursor Spotlight
+    window.addEventListener('pointermove', (e) => {
+      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+    });
+
+    // Card 3D tilt
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.card').forEach(card => {
+        card.classList.add('interactive-tilt');
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          card.style.setProperty('--sheen-x', `${e.clientX - rect.left}px`);
+          card.style.setProperty('--sheen-y', `${e.clientY - rect.top}px`);
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.setProperty('--sheen-x', '-100%');
+          card.style.setProperty('--sheen-y', '-100%');
+        });
+      });
+    });
+
+    // High-Tech Geometric Particle Confetti
+    let confettiParticles = [];
+    let confettiAnim = null;
+    function triggerConfettiBurst(ox, oy) {
+      const canvas = document.getElementById('confetti-canvas');
+      if (!canvas) return;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+      const x = ox || window.innerWidth / 2;
+      const y = oy || Math.min(window.innerHeight * 0.35, 300);
+      const colors = ['#00F2FE', '#38BDF8', '#10B981', '#8B5CF6', '#F59E0B', '#F43F5E'];
+      for (let i = 0; i < 60; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 8 + 3;
+        confettiParticles.push({
+          x: x, y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 2.5,
+          size: Math.random() * 5 + 3,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          alpha: 1,
+          rot: Math.random() * 360,
+          rotSpd: (Math.random() - 0.5) * 12,
+          decay: Math.random() * 0.018 + 0.014
+        });
+      }
+      if (!confettiAnim) loopConfetti();
+    }
+    function loopConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = confettiParticles.length - 1; i >= 0; i--) {
+        const p = confettiParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.22;
+        p.vx *= 0.985;
+        p.rot += p.rotSpd;
+        p.alpha -= p.decay;
+        if (p.alpha <= 0) {
+          confettiParticles.splice(i, 1);
+          continue;
+        }
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rot * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        ctx.restore();
+      }
+      if (confettiParticles.length > 0) {
+        confettiAnim = requestAnimationFrame(loopConfetti);
+      } else {
+        confettiAnim = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    // Quick Inspiration Preset Applicator
+    function applyQuickPreset(type) {
+      SoundEngine.playClick();
+      const input = document.getElementById('input-text');
+      if (type === 'topic14') {
+        input.value = "DISCRETE MATHEMATICS AND GRAPH THEORY PROJECT TOPIC 14 OPTIMAL PREFIX CODES AND DATA COMPRESSION HUFFMAN CODING JAIN UNIVERSITY";
+      } else if (type === 'hamlet') {
+        input.value = "TO BE OR NOT TO BE THAT IS THE QUESTION WHETHER TIS NOBLER IN THE MIND TO SUFFER THE SLINGS AND ARROWS OF OUTRAGEOUS FORTUNE OR TO TAKE ARMS AGAINST A SEA OF TROUBLES AND BY OPPOSING END THEM";
+      } else if (type === 'dna') {
+        input.value = "ATGCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCG";
+      } else if (type === 'skewed') {
+        input.value = "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEAAAAAAAAAAAAAAAIIIIIIIIIOOOOOOOUUU";
+      } else if (type === 'json') {
+        input.value = JSON.stringify({"status":"optimal","experiment":"DMGT Topic 14","algorithm":"Huffman","prefixOptimal":true,"lossless":true}, null, 2);
+      }
+      runCompression();
+    }
+
+    // Interactive Character Lexer & Highlighter
+    let activeHoveredChar = null;
+
+    function renderTextInspector(text) {
+      const container = document.getElementById('interactive-text-inspector');
+      const stream = document.getElementById('text-token-stream');
+      if (!container || !stream) return;
+      if (text.length > 600) {
+        container.style.display = 'none';
+        return;
+      }
+      container.style.display = 'block';
+      let html = '';
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const display = ch === ' ' ? '␣' : (ch === '
+' ? '↵' : ch);
+        const safeChar = encodeURIComponent(ch);
+        html += `<span class="char-token" data-char="${safeChar}" onmouseenter="highlightSymbol('${safeChar}')" onmouseleave="unhighlightSymbol()">${display}</span>`;
+      }
+      stream.innerHTML = html;
+    }
+
+    function highlightSymbol(safeChar) {
+      const ch = decodeURIComponent(safeChar);
+      activeHoveredChar = ch;
+      document.querySelectorAll(`.char-token[data-char="${safeChar}"]`).forEach(el => el.classList.add('highlighted'));
+      document.querySelectorAll(`.bit-token-block[data-char="${safeChar}"]`).forEach(el => el.classList.add('highlighted'));
+      SoundEngine.playTone(450 + (ch.charCodeAt(0) % 20) * 35, 0.05);
+    }
+
+    function unhighlightSymbol() {
+      activeHoveredChar = null;
+      document.querySelectorAll('.char-token.highlighted').forEach(el => el.classList.remove('highlighted'));
+      document.querySelectorAll('.bit-token-block.highlighted').forEach(el => el.classList.remove('highlighted'));
+    }
+
+    // Interactive Symbol Frequency & Shannon Information Cloud
+    let currentCloudSymbols = [];
+    let currentCloudSort = 'freq';
+    let selectedCloudChar = null;
+
+    function renderSymbolFrequencyCloud(freqs, codes, sfCodes, N) {
+      const card = document.getElementById('symbol-cloud-card');
+      const container = document.getElementById('symbol-chips-container');
+      const badge = document.getElementById('badge-unique-symbols');
+      if (!card || !container) return;
+
+      const keys = Object.keys(freqs || {});
+      if (keys.length === 0) {
+        card.style.display = 'none';
+        return;
+      }
+      card.style.display = 'block';
+      badge.textContent = keys.length + " Unique Symbols";
+
+      currentCloudSymbols = keys.map(ch => {
+        const count = freqs[ch];
+        const p = count / N;
+        const selfInfo = -Math.log2(p);
+        const code = codes ? (codes[ch] || '') : '';
+        const sfCode = sfCodes ? (sfCodes[ch] || '') : '';
+        const len = code.length;
+        const kraftTerm = Math.pow(2, -len);
+        let display = ch;
+        let label = 'U+' + ch.charCodeAt(0).toString(16).padStart(4, '0').toUpperCase();
+        let isSpecial = false;
+        if (ch === ' ') { display = '␣'; label = 'SPACE'; isSpecial = true; }
+        else if (ch === '
+') { display = '↵'; label = 'NEWLINE'; isSpecial = true; }
+        else if (ch === '	') { display = '⇥'; label = 'TAB'; isSpecial = true; }
+
+        return {
+          char: ch,
+          display,
+          label,
+          isSpecial,
+          count,
+          p,
+          selfInfo,
+          code,
+          sfCode,
+          len,
+          kraftTerm,
+          pct: ((count / N) * 100).toFixed(2)
+        };
+      });
+
+      buildSymbolCloudDOM();
+    }
+
+    function sortSymbolCloud(mode) {
+      currentCloudSort = mode;
+      SoundEngine.playClick();
+      ['freq', 'len', 'alpha'].forEach(m => {
+        const b = document.getElementById('btn-sort-' + m);
+        if (b) {
+          b.style.background = m === mode ? 'var(--navy)' : 'transparent';
+          b.style.color = m === mode ? '#000' : 'var(--text-muted)';
+        }
+      });
+      buildSymbolCloudDOM();
+    }
+
+    function filterSymbolCloud() {
+      buildSymbolCloudDOM();
+    }
+
+    function buildSymbolCloudDOM() {
+      const container = document.getElementById('symbol-chips-container');
+      const query = (document.getElementById('symbol-search-input')?.value || '').toLowerCase();
+      if (!container) return;
+
+      let list = currentCloudSymbols.slice();
+      if (query) {
+        list = list.filter(s => s.char.toLowerCase().includes(query) || s.label.toLowerCase().includes(query) || s.code.includes(query));
+      }
+
+      if (currentCloudSort === 'freq') {
+        list.sort((a, b) => b.count - a.count);
+      } else if (currentCloudSort === 'len') {
+        list.sort((a, b) => a.len - b.len || b.count - a.count);
+      } else if (currentCloudSort === 'alpha') {
+        list.sort((a, b) => a.char.localeCompare(b.char));
+      }
+
+      let html = '';
+      list.forEach((s, idx) => {
+        const safeChar = encodeURIComponent(s.char);
+        const isCurrent = (selectedCloudChar === s.char);
+        html += `
+          <div class="symbol-chip-item" data-char="${safeChar}"
+               onclick="selectSymbolDetail('${safeChar}')"
+               onmouseenter="highlightSymbol('${safeChar}')"
+               onmouseleave="unhighlightSymbol()"
+               style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; background: ${isCurrent ? 'rgba(0, 242, 254, 0.22)' : 'var(--card-bg)'}; border: ${isCurrent ? '1.5px solid var(--navy)' : '1px solid var(--border)'}; cursor: pointer; transition: all 0.15s ease;">
+            <div style="background: ${s.isSpecial ? 'rgba(245, 158, 11, 0.2)' : 'rgba(56, 189, 248, 0.15)'}; color: ${s.isSpecial ? '#F59E0B' : 'var(--navy)'}; border-radius: 4px; padding: 2px 6px; font-weight: 800; font-family: monospace; font-size: 0.95rem;">
+              ${s.display}
+            </div>
+            <div style="display: flex; flexDirection: column;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span style="font-family: monospace; font-size: 0.82rem; font-weight: 700; color: var(--text);">${s.count}×</span>
+                <span style="font-size: 0.72rem; color: var(--text-muted);">(${s.pct}%)</span>
+              </div>
+              <span style="font-family: monospace; font-size: 0.75rem; color: var(--green); font-weight: 600;">${s.code || '—'}</span>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+
+      if (!selectedCloudChar && currentCloudSymbols.length > 0) {
+        selectSymbolDetail(encodeURIComponent(currentCloudSymbols[0].char));
+      }
+    }
+
+    function selectSymbolDetail(safeChar) {
+      const ch = decodeURIComponent(safeChar);
+      selectedCloudChar = ch;
+      const s = currentCloudSymbols.find(item => item.char === ch);
+      const inspector = document.getElementById('symbol-deep-inspector');
+      if (!inspector || !s) return;
+      inspector.style.display = 'block';
+      SoundEngine.playClick();
+
+      inspector.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(0, 242, 254, 0.15); border: 1px solid var(--navy); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; font-family: monospace; color: var(--navy);">
+              ${s.display}
+            </div>
+            <div>
+              <div style="font-size: 1rem; font-weight: 700; color: var(--text);">
+                Symbol: '${s.char === ' ' ? 'SPACE' : s.char}' 
+                <span style="font-size: 0.78rem; color: var(--text-muted); margin-left: 8px;">(${s.label})</span>
+              </div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">
+                Total Occurrences: <strong style="color: var(--text);">${s.count}</strong> characters
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <span class="badge badge-pass" style="font-family: monospace; font-size: 0.85rem;">
+              Huffman: ${s.code} (${s.len} bits)
+            </span>
+            ${s.sfCode ? `<span class="badge badge-warn" style="font-family: monospace; font-size: 0.85rem;">Shannon-Fano: ${s.sfCode} (${s.sfCode.length} bits)</span>` : ''}
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.85rem;">
+          <div style="background: var(--card-sub); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--border);">
+            <div style="color: var(--text-muted); font-size: 0.75rem;">Empirical Probability p_i</div>
+            <div style="color: var(--navy); font-size: 1.1rem; font-weight: 700; font-family: monospace; margin-top: 2px;">${s.p.toFixed(5)}</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">${s.count} / ${currentText.length} chars</div>
+          </div>
+          <div style="background: var(--card-sub); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--border);">
+            <div style="color: var(--text-muted); font-size: 0.75rem;">Shannon Self-Information I(s_i)</div>
+            <div style="color: #F59E0B; font-size: 1.1rem; font-weight: 700; font-family: monospace; margin-top: 2px;">${s.selfInfo.toFixed(3)} bits</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">-log2(${s.p.toFixed(4)})</div>
+          </div>
+          <div style="background: var(--card-sub); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--border);">
+            <div style="color: var(--text-muted); font-size: 0.75rem;">Codeword Length vs Ideal Bound</div>
+            <div style="color: var(--green); font-size: 1.1rem; font-weight: 700; font-family: monospace; margin-top: 2px;">${s.len} bits (Δ: ${(s.len - s.selfInfo).toFixed(2)})</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Optimal integer ceiling ⌈I(s_i)⌉</div>
+          </div>
+          <div style="background: var(--card-sub); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--border);">
+            <div style="color: var(--text-muted); font-size: 0.75rem;">Kraft Term Contribution</div>
+            <div style="color: #8B5CF6; font-size: 1.1rem; font-weight: 700; font-family: monospace; margin-top: 2px;">2^-${s.len} = ${s.kraftTerm.toFixed(5)}</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">≤ 1.0 Kraft-McMillan Sum</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Interactive Compressed Bitstream Inspector
+    let currentBitstreamFormat = 'tokens';
+    let currentBitstreamData = '';
+
+    function renderBitstreamInspector(text, codes) {
+      const card = document.getElementById('bitstream-inspector-card');
+      const box = document.getElementById('bitstream-content-box');
+      const badge = document.getElementById('badge-bitstream-len');
+      const summary = document.getElementById('bitstream-summary-bar');
+      if (!card || !box) return;
+
+      let fullStream = '';
+      const tokens = [];
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const c = codes[ch] || '0';
+        tokens.push({ char: ch, code: c, offset: fullStream.length });
+        fullStream += c;
+      }
+      currentBitstreamData = fullStream;
+
+      card.style.display = 'block';
+      const hexBytes = [];
+      for (let i = 0; i < fullStream.length; i += 8) {
+        const chunk = fullStream.substring(i, i + 8).padEnd(8, '0');
+        hexBytes.push(parseInt(chunk, 2).toString(16).padStart(2, '0').toUpperCase());
+      }
+
+      badge.textContent = fullStream.length + " Bits (" + hexBytes.length + " Bytes)";
+
+      if (currentBitstreamFormat === 'tokens') {
+        let html = '';
+        tokens.slice(0, 250).forEach(t => {
+          const safeChar = encodeURIComponent(t.char);
+          const displayChar = t.char === ' ' ? '␣' : (t.char === '
+' ? '↵' : t.char);
+          html += `
+            <span class="bit-token-block" data-char="${safeChar}"
+                  onmouseenter="highlightSymbol('${safeChar}')"
+                  onmouseleave="unhighlightSymbol()"
+                  title="Symbol: '${t.char}' | Offset: ${t.offset}">
+              <span style="color: var(--text-muted); font-size: 0.7rem; margin-right: 4px;">${displayChar}</span>
+              <strong>${t.code}</strong>
+            </span>
+          `;
+        });
+        if (tokens.length > 250) html += `<span style="color: var(--text-muted); font-size: 0.8rem; margin-left: 8px;">+${tokens.length - 250} more tokens...</span>`;
+        box.innerHTML = html;
+      } else if (currentBitstreamFormat === 'raw') {
+        box.innerHTML = `<span style="color: var(--navy); word-break: break-all;">${fullStream.slice(0, 2000)}</span>${fullStream.length > 2000 ? `<span style="color: var(--text-muted);"> ...[${fullStream.length - 2000} more bits]</span>` : ''}`;
+      } else if (currentBitstreamFormat === 'hex') {
+        box.innerHTML = hexBytes.slice(0, 160).map(b => `<span style="padding: 2px 6px; border-radius: 4px; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); color: #C084FC; font-size: 0.82rem; margin: 2px; display: inline-block;">0x${b}</span>`).join('') + (hexBytes.length > 160 ? `<span style="color: var(--text-muted); margin-left: 8px;">+${hexBytes.length - 160} more bytes</span>` : '');
+      }
+
+      const paddingBits = (8 - (fullStream.length % 8)) % 8;
+      summary.innerHTML = `
+        <div>Byte Alignment: <strong>${fullStream.length} bits</strong> ➔ Packed into <strong style="color: var(--green);">${hexBytes.length} bytes</strong> (${paddingBits} padding bits)</div>
+        <div style="display: flex; gap: 12px;">
+          <span>Fixed ASCII: <span style="color: #F87171;">${text.length * 8} bits</span></span>
+          <span>Huffman: <span style="color: var(--green);">${fullStream.length} bits</span></span>
+          <span>Savings: <span style="color: var(--navy); font-weight: 700;">${((1 - fullStream.length / (text.length * 8)) * 100).toFixed(1)}%</span></span>
+        </div>
+      `;
+    }
+
+    function setBitstreamViewMode(mode) {
+      currentBitstreamFormat = mode;
+      SoundEngine.playClick();
+      ['tokens', 'raw', 'hex'].forEach(m => {
+        const b = document.getElementById('btn-stream-' + m);
+        if (b) {
+          b.style.background = m === mode ? 'var(--navy)' : 'transparent';
+          b.style.color = m === mode ? '#000' : 'var(--text-muted)';
+        }
+      });
+      if (currentText && currentCodes) renderBitstreamInspector(currentText, currentCodes);
+    }
+
+    function copyBitstreamToClipboard() {
+      if (currentBitstreamData) {
+        navigator.clipboard.writeText(currentBitstreamData);
+        SoundEngine.playSuccess();
+        alert("Compressed binary bitstream copied to clipboard!");
+      }
+    }
+
     // Multi-Theme Engine Logic
     function applyTheme(themeKey) {
       document.body.className = '';
@@ -1407,6 +2125,13 @@
       updateNoiseSimulation();
       updateGraphInvariants();
       runAdaptiveSimulation();
+
+      // Render Interactivity Suite
+      renderTextInspector(text);
+      renderSymbolFrequencyCloud(freqs, currentCodes, currentSfCodes, text.length);
+      renderBitstreamInspector(text, currentCodes);
+      triggerConfettiBurst();
+      SoundEngine.playSuccess();
       }
     }
 
@@ -1632,6 +2357,7 @@
 
     // Tab switching
     function switchTab(tabId) {
+      SoundEngine.playClick();
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
@@ -1946,6 +2672,7 @@
     }
 
     function startAlgorithmRace() {
+      SoundEngine.playClick();
       const testMsg = document.getElementById('race-test-input').value || "DISCRETE MATHEMATICS AND GRAPH THEORY OPTIMIZATION";
       let hBits = 0;
       let sfBits = 0;
@@ -1973,6 +2700,7 @@
         document.getElementById('race-sf-bits').innerText = sfBits + ' bits';
 
         const diff = sfBits - hBits;
+        SoundEngine.playSuccess();
         if (diff > 0) {
           document.getElementById('race-outcome-desc').innerHTML = `
             🎉 <strong>Race Winner: Huffman Coding!</strong> Used <strong>${hBits} bits</strong> vs. Shannon-Fano's <strong>${sfBits} bits</strong> (Saved <strong>${diff} bits</strong> / ${( (diff/sfBits)*100 ).toFixed(1)}% advantage).
@@ -2623,6 +3351,7 @@
       let bit = traceBitstring[traceBitIdx];
       traceBitIdx++;
 
+      SoundEngine.playBit(bit);
       if (bit === "0") {
         traceCurrentNode = traceCurrentNode.left || traceCurrentNode;
         document.getElementById('trace-path-desc').innerText = "Encountered '0' -> Navigated LEFT to weight " + traceCurrentNode.freq;
@@ -2632,6 +3361,7 @@
       }
 
       if (!traceCurrentNode.left && !traceCurrentNode.right) {
+        SoundEngine.playLeafChime();
         traceDecodedOutput += traceCurrentNode.char;
         document.getElementById('trace-decoded').innerText = traceDecodedOutput;
         document.getElementById('trace-status').innerText = "Leaf reached! Emitted '" + traceCurrentNode.char + "' -> Reset to Root";

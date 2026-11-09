@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { packHuffmanBinary, unpackHuffmanBinary } from '../utils/huffmanBinary';
+import { SoundEngine } from '../utils/soundEngine';
 
 export default function FileCompressor({ codes, freqs }) {
   const [fileData, setFileData] = useState(null);
@@ -35,8 +36,10 @@ export default function FileCompressor({ codes, freqs }) {
             symbolCount: result.symbolCount,
             size: buffer.byteLength
           });
+          SoundEngine.playSuccess();
         } catch (err) {
           setErrorMsg("Failed to decompress .huff file: " + err.message);
+          SoundEngine.playGlitch();
         }
       };
       reader.readAsArrayBuffer(file);
@@ -80,6 +83,7 @@ export default function FileCompressor({ codes, freqs }) {
 
         const packed = packHuffmanBinary(text, localCodes, localFreqs);
         setCompressResult(packed);
+        SoundEngine.playSuccess();
       };
       reader.readAsText(file);
     }
@@ -88,6 +92,7 @@ export default function FileCompressor({ codes, freqs }) {
   // Download .huff binary file
   const downloadHuffFile = () => {
     if (!compressResult) return;
+    SoundEngine.playClick();
     const blob = new Blob([compressResult.buffer], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -100,6 +105,7 @@ export default function FileCompressor({ codes, freqs }) {
   // Download restored file
   const downloadRestoredFile = () => {
     if (!decompressedFile) return;
+    SoundEngine.playClick();
     const blob = new Blob([decompressedFile.text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

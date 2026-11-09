@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SoundEngine } from '../utils/soundEngine';
 
 export default function AlgorithmRace({ codes, sfCodes, freqs }) {
   const [testText, setTestText] = useState("DISCRETE MATHEMATICS AND GRAPH THEORY OPTIMIZATION");
@@ -14,6 +15,7 @@ export default function AlgorithmRace({ codes, sfCodes, freqs }) {
   }
 
   const handleStartRace = () => {
+    SoundEngine.playClick();
     setRacing(true);
     setRaceProgress(0);
     let p = 0;
@@ -23,6 +25,7 @@ export default function AlgorithmRace({ codes, sfCodes, freqs }) {
         p = 1;
         clearInterval(interval);
         setRacing(false);
+        SoundEngine.playSuccess();
       }
       setRaceProgress(p);
     }, 40);

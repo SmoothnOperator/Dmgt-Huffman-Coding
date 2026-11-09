@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { simulateBitFlip } from '../utils/channelNoise';
+import { SoundEngine } from '../utils/soundEngine';
 
 export default function ChannelNoiseSimulator({ codes, treeData }) {
   const [sampleText, setSampleText] = useState("DISCRETE MATHEMATICS HUFFMAN CODING TRANSMISSION");
@@ -8,6 +9,16 @@ export default function ChannelNoiseSimulator({ codes, treeData }) {
   const result = simulateBitFlip(sampleText, codes, treeData, flippedIndex);
 
   if (!result) return null;
+
+  const handleRandomFlip = () => {
+    SoundEngine.playGlitch();
+    setFlippedIndex(Math.floor(Math.random() * result.totalBits));
+  };
+
+  const handleSliderChange = (newVal) => {
+    SoundEngine.playGlitch();
+    setFlippedIndex(newVal);
+  };
 
   return (
     <div className="glass-card">
@@ -21,7 +32,7 @@ export default function ChannelNoiseSimulator({ codes, treeData }) {
           </p>
         </div>
         <button 
-          onClick={() => setFlippedIndex(Math.floor(Math.random() * result.totalBits))}
+          onClick={handleRandomFlip}
           className="badge badge-amber"
           style={{ cursor: 'pointer', padding: '8px 16px' }}
         >
@@ -45,7 +56,7 @@ export default function ChannelNoiseSimulator({ codes, treeData }) {
           min="0"
           max={result.totalBits - 1}
           value={result.flippedBitIndex}
-          onChange={(e) => setFlippedIndex(parseInt(e.target.value))}
+          onChange={(e) => handleSliderChange(parseInt(e.target.value))}
           style={{ width: '100%', accentColor: 'var(--accent-rose)' }}
         />
 

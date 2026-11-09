@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header, { THEMES } from './components/Header';
 import MetricsCards from './components/MetricsCards';
 import ThreeDTreeViewer from './components/ThreeDTreeViewer';
@@ -12,8 +12,20 @@ import BitTracer from './components/BitTracer';
 import AlgorithmRace from './components/AlgorithmRace';
 import CodeFeeder from './components/CodeFeeder';
 import BenchmarkView from './components/BenchmarkView';
+import SymbolFrequencyCloud from './components/SymbolFrequencyCloud';
+import BitstreamInspector from './components/BitstreamInspector';
+import ConfettiBurst from './components/ConfettiBurst';
+import { SoundEngine } from './utils/soundEngine';
 
 const DEFAULT_SAMPLE = "DISCRETE MATHEMATICS AND GRAPH THEORY PROJECT TOPIC 14 OPTIMAL PREFIX CODES AND DATA COMPRESSION HUFFMAN CODING JAIN UNIVERSITY";
+
+const QUICK_PRESETS = [
+  { label: '🚀 Topic 14 Sample', text: DEFAULT_SAMPLE },
+  { label: '📜 English Literature', text: "TO BE OR NOT TO BE THAT IS THE QUESTION WHETHER TIS NOBLER IN THE MIND TO SUFFER THE SLINGS AND ARROWS OF OUTRAGEOUS FORTUNE OR TO TAKE ARMS AGAINST A SEA OF TROUBLES AND BY OPPOSING END THEM" },
+  { label: '🧬 DNA Double Helix', text: "ATGCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCG" },
+  { label: '⚡ Skewed Power-Law', text: "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEAAAAAAAAAAAAAAAIIIIIIIIIOOOOOOOUUU" },
+  { label: '🌐 JSON Data Packet', text: '{"status":"optimal","experiment":"DMGT Topic 14","algorithm":"Huffman","prefixOptimal":true,"lossless":true}' }
+];
 
 export default function App() {
   const [theme, setTheme] = useState('theme-midnight');
@@ -21,6 +33,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('simulator');
   const [inputText, setInputText] = useState(DEFAULT_SAMPLE);
   const [loading, setLoading] = useState(false);
+  const [hoveredChar, setHoveredChar] = useState(null);
 
   const [metrics, setMetrics] = useState(null);
   const [treeData, setTreeData] = useState(null);
@@ -30,10 +43,22 @@ export default function App() {
   const [steps, setSteps] = useState([]);
   const [presets, setPresets] = useState({});
 
+  const confettiRef = useRef(null);
+
   // Sync theme with body class
   useEffect(() => {
     document.body.className = theme;
   }, [theme]);
+
+  // Ambient cursor spotlight listener
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+    };
+    window.addEventListener('pointermove', handleMouseMove);
+    return () => window.removeEventListener('pointermove', handleMouseMove);
+  }, []);
 
   // Load presets from server or defaults
   useEffect(() => {
@@ -49,15 +74,17 @@ export default function App() {
       });
 
     // Auto-run on first load
-    runCompression(DEFAULT_SAMPLE);
+    runCompression(DEFAULT_SAMPLE, false);
   }, []);
 
   // Huffman Compression Runner (calls Node API or client-side fallback)
-  const runCompression = async (textToCompress) => {
+  const runCompression = async (textToCompress, playFx = true) => {
     const text = textToCompress || inputText;
     if (!text || text.length === 0) return;
 
     setLoading(true);
+    if (playFx) SoundEngine.playClick();
+
     try {
       const res = await fetch('/api/huffman/compress', {
         method: 'POST',
@@ -71,9 +98,18 @@ export default function App() {
       setSfCodes(data.sfCodes);
       setFreqs(data.freqs);
       setSteps(data.steps);
+      
+      if (playFx) {
+        SoundEngine.playSuccess();
+        if (confettiRef.current) confettiRef.current.burst();
+      }
     } catch (err) {
       console.warn("API offline, computing client-side:", err);
       clientSideCompress(text);
+      if (playFx) {
+        SoundEngine.playSuccess();
+        if (confettiRef.current) confettiRef.current.burst();
+      }
     } finally {
       setLoading(false);
     }
@@ -145,6 +181,22 @@ export default function App() {
     setSteps(stepsList);
   };
 
+  // Card Tilt Helper
+  const handleCardTilt = (e) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    card.style.setProperty('--sheen-x', `${x}px`);
+    card.style.setProperty('--sheen-y', `${y}px`);
+  };
+
+  const handleCardTiltLeave = (e) => {
+    const card = e.currentTarget;
+    card.style.setProperty('--sheen-x', '-100%');
+    card.style.setProperty('--sheen-y', '-100%');
+  };
+
   const tabs = [
     { id: 'simulator', label: '🌳 Visual Simulation Model' },
     { id: 'compressor', label: '🗜️ Real File Compressor (.huff)' },
@@ -161,6 +213,12 @@ export default function App() {
   return (
     <div className="app-wrapper">
       
+      {/* Ambient Cursor Spotlight Glow */}
+      <div className="ambient-spotlight" />
+
+      {/* Confetti Particle Burst Overlay */}
+      <ConfettiBurst ref={confettiRef} />
+
       {/* Header */}
       <Header 
         currentTheme={theme} 
@@ -174,7 +232,10 @@ export default function App() {
         {tabs.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              SoundEngine.playClick();
+              setActiveTab(tab.id);
+            }}
             style={{
               padding: '10px 18px',
               borderRadius: '8px 8px 0 0',
@@ -198,19 +259,27 @@ export default function App() {
       {activeTab === 'simulator' && (
         <>
           {/* Input & Action Feeder Card */}
-          <div className="glass-card">
+          <div 
+            className="glass-card interactive-tilt"
+            onMouseMove={handleCardTilt}
+            onMouseLeave={handleCardTiltLeave}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span className="font-heading" style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                  📥 Input Data Feeder
+                  📥 Input Data Feeder & Real-Time Lexer
                 </span>
-                <span className="badge badge-cyan">{inputText.length.toLocaleString()} Characters Ready</span>
+                <span className="badge badge-cyan">{inputText.length.toLocaleString()} Characters</span>
+                <span className="badge badge-emerald">{Object.keys(freqs || {}).length} Alphabet Size</span>
               </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
+
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                 <select 
                   onChange={(e) => {
                     if (presets[e.target.value]) {
-                      setInputText(presets[e.target.value]);
+                      const newText = presets[e.target.value];
+                      setInputText(newText);
+                      runCompression(newText);
                     }
                   }}
                   style={{
@@ -227,6 +296,7 @@ export default function App() {
                     <option key={k} value={k}>{k}</option>
                   ))}
                 </select>
+
                 <button 
                   onClick={() => runCompression()}
                   disabled={loading}
@@ -236,6 +306,25 @@ export default function App() {
                   {loading ? '⚡ Computing...' : '⚡ Compress & Generate Model'}
                 </button>
               </div>
+            </div>
+
+            {/* Quick Inspiration Preset Chips */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)', alignSelf: 'center', marginRight: '4px' }}>
+                Quick Presets:
+              </span>
+              {QUICK_PRESETS.map((preset, idx) => (
+                <button
+                  key={idx}
+                  className="preset-chip"
+                  onClick={() => {
+                    setInputText(preset.text);
+                    runCompression(preset.text);
+                  }}
+                >
+                  {preset.label}
+                </button>
+              ))}
             </div>
 
             <textarea 
@@ -256,13 +345,74 @@ export default function App() {
                 resize: 'vertical'
               }}
             />
+
+            {/* Live Interactive Character Highlighter Preview */}
+            {inputText.length <= 600 && (
+              <div style={{
+                marginTop: '12px',
+                padding: '10px 14px',
+                background: 'var(--bg-secondary)',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.85rem',
+                lineHeight: 1.6,
+                maxHeight: '120px',
+                overflowY: 'auto'
+              }}>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-dim)', marginBottom: '4px' }}>
+                  Interactive Text Inspector (Hover symbols below to illuminate all occurrences):
+                </div>
+                {inputText.split('').map((ch, idx) => {
+                  const isMatch = hoveredChar === ch;
+                  return (
+                    <span 
+                      key={idx}
+                      className={`char-token ${isMatch ? 'highlighted' : ''}`}
+                      onMouseEnter={() => {
+                        setHoveredChar(ch);
+                        SoundEngine.playTone(450 + (ch.charCodeAt(0) % 20) * 35, 0.05);
+                      }}
+                      onMouseLeave={() => setHoveredChar(null)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {ch}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Mathematical Metrics Section */}
           <MetricsCards metrics={metrics} />
 
+          {/* Interactive Symbol Frequency Cloud */}
+          <SymbolFrequencyCloud 
+            freqs={freqs}
+            codes={codes}
+            sfCodes={sfCodes}
+            totalChars={inputText.length}
+            inputText={inputText}
+            hoveredChar={hoveredChar}
+            setHoveredChar={setHoveredChar}
+          />
+
+          {/* Interactive Compressed Bitstream Inspector */}
+          <BitstreamInspector 
+            inputText={inputText}
+            codes={codes}
+            hoveredChar={hoveredChar}
+            setHoveredChar={setHoveredChar}
+          />
+
           {/* Tree Visualization Card (3D or 2D) */}
-          <div className="glass-card">
+          <div 
+            className="glass-card interactive-tilt"
+            onMouseMove={handleCardTilt}
+            onMouseLeave={handleCardTiltLeave}
+            style={{ marginTop: '20px' }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <h3 className="font-heading" style={{ fontSize: '1.25rem', color: 'var(--accent-cyan)' }}>
@@ -273,7 +423,10 @@ export default function App() {
                 </span>
               </div>
               <button 
-                onClick={() => setViewMode3D(!viewMode3D)}
+                onClick={() => {
+                  SoundEngine.playClick();
+                  setViewMode3D(!viewMode3D);
+                }}
                 className="badge badge-amber"
                 style={{ cursor: 'pointer', padding: '8px 16px' }}
               >

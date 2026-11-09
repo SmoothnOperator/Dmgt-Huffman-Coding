@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { SoundEngine } from '../utils/soundEngine';
 
 export const THEMES = [
   { id: 'theme-midnight', name: '🌌 Midnight Cyber', desc: 'Obsidian & Neon Cyan (Default)', accent: '#00F2FE' },
@@ -9,6 +10,13 @@ export const THEMES = [
 ];
 
 export default function Header({ currentTheme, setTheme, viewMode3D, setViewMode3D }) {
+  const [soundOn, setSoundOn] = useState(SoundEngine.isEnabled());
+
+  const handleSoundToggle = () => {
+    const newState = SoundEngine.toggle();
+    setSoundOn(newState);
+  };
+
   return (
     <header className="glass-card" style={{ marginBottom: '24px', padding: '20px 28px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
@@ -37,12 +45,38 @@ export default function Header({ currentTheme, setTheme, viewMode3D, setViewMode
           </p>
         </div>
 
-        {/* Right: Theme Selector, 3D Toggle & Team Pill */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+        {/* Right: Sound FX, 3D Toggle, Theme Selector & Team Pill */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           
+          {/* Sound FX Engine Toggle */}
+          <button
+            onClick={handleSoundToggle}
+            title="Toggle Web Audio API Sound Effects"
+            style={{
+              padding: '8px 14px',
+              borderRadius: '8px',
+              border: soundOn ? '1px solid var(--accent-emerald)' : '1px solid var(--border)',
+              background: soundOn ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-card-hover)',
+              color: soundOn ? 'var(--accent-emerald)' : 'var(--text-dim)',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: soundOn ? '0 0 14px rgba(16, 185, 129, 0.3)' : 'none',
+              transition: 'all 0.25s ease'
+            }}
+          >
+            <span>{soundOn ? '🔊 Sound FX: ON' : '🔇 Sound FX: OFF'}</span>
+          </button>
+
           {/* 3D Visualizer Toggle */}
           <button 
-            onClick={() => setViewMode3D(!viewMode3D)}
+            onClick={() => {
+              SoundEngine.playClick();
+              setViewMode3D(!viewMode3D);
+            }}
             style={{
               padding: '8px 16px',
               borderRadius: '8px',
@@ -67,7 +101,10 @@ export default function Header({ currentTheme, setTheme, viewMode3D, setViewMode
             <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600 }}>Theme:</label>
             <select 
               value={currentTheme} 
-              onChange={(e) => setTheme(e.target.value)}
+              onChange={(e) => {
+                SoundEngine.playClick();
+                setTheme(e.target.value);
+              }}
               style={{
                 background: 'var(--bg-input)',
                 color: 'var(--text-main)',
@@ -98,7 +135,7 @@ export default function Header({ currentTheme, setTheme, viewMode3D, setViewMode
             textAlign: 'right'
           }}>
             <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>Team Topic 14</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
               Nikhil (Lead) • Piyush • Sakshi • Arushi • Harsh • Khyathi
             </div>
           </div>
