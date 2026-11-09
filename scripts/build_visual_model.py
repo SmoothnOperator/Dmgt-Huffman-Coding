@@ -244,6 +244,7 @@ html_content = f"""<!DOCTYPE html>
       margin-bottom: 4px;
       background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 50%, #8B5CF6 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }}
     .header-title p {{

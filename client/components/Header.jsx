@@ -26,6 +26,7 @@ export default function Header({ currentTheme, setTheme, viewMode3D, setViewMode
             letterSpacing: '-0.5px',
             background: 'var(--gradient-primary)',
             WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             marginBottom: '4px'
           }}>
