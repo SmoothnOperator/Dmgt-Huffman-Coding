@@ -8,6 +8,7 @@ Topic 14: Optimal Prefix Codes and Data Compression Using Huffman Coding
 
 import os
 import docx
+from docx.styles.style import ParagraphStyle
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
@@ -44,10 +45,11 @@ def create_full_report():
 
     # Style definitions
     style = doc.styles['Normal']
-    font = style.font
-    font.name = 'Times New Roman'
-    font.size = Pt(11)
-    font.color.rgb = RGBColor(20, 20, 20)
+    if isinstance(style, ParagraphStyle):
+        font = style.font
+        font.name = 'Times New Roman'
+        font.size = Pt(11)
+        font.color.rgb = RGBColor(20, 20, 20)
 
     # ==========================================
     # COVER / TITLE PAGE (MATCHING UNIVERSITY TEMPLATE)
