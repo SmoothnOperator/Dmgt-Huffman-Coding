@@ -325,7 +325,7 @@ export default function SymbolFrequencyCloud({ freqs, codes, sfCodes, totalChars
           <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Root-to-Leaf Traversal Path:</span>
             <span className="badge badge-amber" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>ROOT</span>
-            {activeSymbol.code.split('').map((bit, bIdx) => (
+            {(activeSymbol.code || '').split('').map((bit, bIdx) => (
               <React.Fragment key={bIdx}>
                 <span style={{ color: 'var(--text-dim)', fontSize: '0.8rem' }}>➔</span>
                 <span 

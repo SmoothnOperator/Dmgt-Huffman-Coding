@@ -91,13 +91,19 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text })
       });
+      if (!res.ok) {
+        throw new Error(`API returned HTTP ${res.status}`);
+      }
       const data = await res.json();
+      if (!data || !data.metrics || !data.tree) {
+        throw new Error('Invalid API response structure');
+      }
       setMetrics(data.metrics);
       setTreeData(data.tree);
-      setCodes(data.codes);
-      setSfCodes(data.sfCodes);
-      setFreqs(data.freqs);
-      setSteps(data.steps);
+      setCodes(data.codes || {});
+      setSfCodes(data.sfCodes || {});
+      setFreqs(data.freqs || {});
+      setSteps(data.steps || []);
       
       if (playFx) {
         SoundEngine.playSuccess();

@@ -1869,7 +1869,7 @@ html_content = f"""<!DOCTYPE html>
       let html = '';
       for (let i = 0; i < text.length; i++) {{
         const ch = text[i];
-        const display = ch === ' ' ? '␣' : (ch === '\n' ? '↵' : ch);
+        const display = ch === ' ' ? '␣' : ((ch && ch.charCodeAt(0) === 10) ? '↵' : ch);
         const safeChar = encodeURIComponent(ch);
         html += `<span class="char-token" data-char="${{safeChar}}" onmouseenter="highlightSymbol('${{safeChar}}')" onmouseleave="unhighlightSymbol()">${{display}}</span>`;
       }}
@@ -1921,8 +1921,8 @@ html_content = f"""<!DOCTYPE html>
         let label = 'U+' + ch.charCodeAt(0).toString(16).padStart(4, '0').toUpperCase();
         let isSpecial = false;
         if (ch === ' ') {{ display = '␣'; label = 'SPACE'; isSpecial = true; }}
-        else if (ch === '\n') {{ display = '↵'; label = 'NEWLINE'; isSpecial = true; }}
-        else if (ch === '\t') {{ display = '⇥'; label = 'TAB'; isSpecial = true; }}
+        else if ((ch && ch.charCodeAt(0) === 10)) {{ display = '↵'; label = 'NEWLINE'; isSpecial = true; }}
+        else if ((ch && ch.charCodeAt(0) === 9)) {{ display = '⇥'; label = 'TAB'; isSpecial = true; }}
 
         return {{
           char: ch,
@@ -2100,7 +2100,7 @@ html_content = f"""<!DOCTYPE html>
         let html = '';
         tokens.slice(0, 250).forEach(t => {{
           const safeChar = encodeURIComponent(t.char);
-          const displayChar = t.char === ' ' ? '␣' : (t.char === '\n' ? '↵' : t.char);
+          const displayChar = t.char === ' ' ? '␣' : ((t.char && t.char.charCodeAt(0) === 10) ? '↵' : t.char);
           html += `
             <span class="bit-token-block" data-char="${{safeChar}}"
                   onmouseenter="highlightSymbol('${{safeChar}}')"
@@ -2170,16 +2170,9 @@ html_content = f"""<!DOCTYPE html>
       if (currentTreeRoot) {{
         renderTreeSVG(currentTreeRoot, false);
         if (is3DMode) renderTree3D(currentTreeRoot);
-      updateNoiseSimulation();
-      updateGraphInvariants();
-      runAdaptiveSimulation();
-
-      // Render Interactivity Suite
-      renderTextInspector(text);
-      renderSymbolFrequencyCloud(freqs, currentCodes, currentSfCodes, text.length);
-      renderBitstreamInspector(text, currentCodes);
-      triggerConfettiBurst();
-      SoundEngine.playSuccess();
+        updateNoiseSimulation();
+        updateGraphInvariants();
+        runAdaptiveSimulation();
       }}
     }}
 
@@ -2448,7 +2441,7 @@ html_content = f"""<!DOCTYPE html>
       loadPreset(false);
     }}
 
-    function loadPreset(autoRun) {{
+    function loadPreset(autoRun, isManual = true) {{
       const val = document.getElementById('select-preset').value;
       if (PRESETS[val]) {{
         const text = PRESETS[val];
@@ -2456,7 +2449,7 @@ html_content = f"""<!DOCTYPE html>
         document.getElementById('badge-chars').innerText = text.length.toLocaleString() + " Characters (Ready)";
         
         if (autoRun) {{
-          runCompression();
+          runCompression(isManual);
         }} else {{
           document.getElementById('tree-placeholder').style.display = 'block';
           document.getElementById('tree-active-view').style.display = 'none';
@@ -2528,7 +2521,7 @@ html_content = f"""<!DOCTYPE html>
     }}
 
     // Explicit Compression Trigger
-    async function runCompression() {{
+    async function runCompression(isManual = true) {{
       const text = document.getElementById('input-text').value;
       if (!text || !text.trim()) {{
         alert("Please enter or select text before compressing.");
@@ -2663,15 +2656,26 @@ html_content = f"""<!DOCTYPE html>
       updateGraphInvariants();
       runAdaptiveSimulation();
 
+      // Render Interactivity Suite
+      renderTextInspector(text);
+      renderSymbolFrequencyCloud(freqs, currentCodes, currentSfCodes, text.length);
+      renderBitstreamInspector(text, currentCodes);
+      if (isManual) {{
+        triggerConfettiBurst();
+        SoundEngine.playSuccess();
+      }}
+
       // 7. Update Step Simulator & Bitstream Tracer
       currentStepIdx = 0;
       updateStepView();
       setupBitTracer();
 
       // Smooth scroll
-      setTimeout(() => {{
-        document.getElementById('tree-card-section').scrollIntoView({{ behavior: 'smooth', block: 'nearest' }});
-      }}, 80);
+      if (isManual) {{
+        setTimeout(() => {{
+          document.getElementById('tree-card-section').scrollIntoView({{ behavior: 'smooth', block: 'nearest' }});
+        }}, 80);
+      }}
     }}
 
     // Algorithm Race & Divergence Table
@@ -3459,7 +3463,7 @@ html_content = f"""<!DOCTYPE html>
     window.onload = function() {{
       showSource('huffman.py');
       document.getElementById('select-preset').value = 'huffman_py';
-      loadPreset(false);
+      loadPreset(true, false);
     }};
 
     // ==========================================
