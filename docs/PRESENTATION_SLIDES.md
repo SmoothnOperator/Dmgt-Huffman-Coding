@@ -93,19 +93,29 @@
 
 ---
 
-### Slide 9: Experiment 2 Results — Runtime Complexity & Tree Visualization
-* **Presenter:** Harsh & Khyathi (Visualization)
+### Slide 9: Experiment 2 Results — Interactive Studio, Dual Tree Race & Visual Verification
+* **Presenters:** Harsh, Khyathi & Nikhil
 * **Key Points on Slide:**
-  - Scaling test: $N = 300$ to $100,000$ symbols (execution time $< 3.7$ ms).
-  - Display NetworkX Tree Visualization: Root, internal nodes with weights, leaf symbols, edge labels (`0` and `1`).
-  - Linear scaling confirms algorithm is suitable for high-throughput streaming environments.
+  - **Live Web Visualizer & Testing Suite:** Real-time interactive laboratory served at `http://localhost:8000/interactive_explorer.html`.
+  - **⚖️ Side-by-Side Dual Tree Comparator & Algorithm Race:**
+    - Live simultaneous encoding of messages letter-by-letter between Huffman (bottom-up greedy) and Shannon–Fano (top-down heuristic).
+    - Real-time bitstream accumulation proving Huffman achieves strictly lower or equal bit lengths ($L_{\text{Huffman}} \le L_{\text{SF}}$).
+    - Interactive path inspector: hovering over any symbol highlights the exact root-to-leaf binary walk on both trees simultaneously.
+  - **💥 Fault Injector & Channel Noise:**
+    - Single bit-flip simulation demonstrating prefix code desynchronization and cascading error propagation.
+  - **📐 Rigorous DMGT Mathematical Proofs (Live Calculations):**
+    - Kraft–McMillan Equality: $\sum_{i=1}^{|\Sigma|} 2^{-l_i} = 1.000 \le 1.0$ (Exact equality proving 100% complete binary tree with zero wasted code-space).
+    - Shannon Entropy Bound: $H(X) = -\sum p_i \log_2(p_i)$ (Absolute theoretical lower limit).
+    - Source Coding Theorem: $H(X) \le L(C) < H(X) + 1.0$ with near-zero redundancy $R = L(C) - H(X) \approx 0.028\text{ bits/sym}$.
+    - Graph Invariants: $|V| = 2|\Sigma| - 1$, $|E| = 2|\Sigma| - 2 = |V| - 1$, $|V_{\text{internal}}| = |\Sigma| - 1$, $|V_{\text{leaves}}| = |\Sigma|$.
+  - **👣 Priority Queue Heap Stepper:** Step-by-step min-heap assembly in $\mathcal{O}(|\Sigma| \log |\Sigma|)$ time.
 
 ---
 
-### Slide 10: Conclusion, Future Scope & Q&A
-* **Presenter:** Khyathi & All Members
+### Slide 10: Conclusion, Future Scope & Team Defense
+* **Presenters:** All 6 Team Members (Nikhil, Sakshi, Arushi, Piyush, Harsh, Khyathi)
 * **Key Points on Slide:**
-  - Summary: DMGT rooted trees solve optimal prefix coding with provable bounds.
-  - Limitations: Codebook header transmission overhead on tiny files ($N < 200$).
-  - Future Scope: Adaptive Dynamic Huffman (Vitter/FGK), Arithmetic Coding for non-integer bit allocation.
-  - Open for Faculty Questions & Defense.
+  - **Summary:** Bottom-up greedy binary tree construction strictly solves optimal prefix coding with provable information-theoretic bounds.
+  - **Lossless Guarantee:** Verified $\mathcal{D}(\mathcal{E}(M)) = M$ across all benchmark domains (English, Code, DNA, Uniform).
+  - **Limitations & Real-World Solutions:** Codebook header transmission cost on short files addressed by Adaptive Huffman (FGK dynamic tree) and Merkle-tree cryptographic integrity proofs.
+  - **Open for Faculty Questions & Defense.**

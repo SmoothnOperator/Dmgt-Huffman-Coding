@@ -52,9 +52,9 @@ class HuffmanVisualizer:
             graph.add_node(node_id, label=label, type=node_type, weight=node.freq)
 
             if is_terminal:
-                x = float(leaf_counter[0])
+                x = float(leaf_counter[0]) * 2.2
                 leaf_counter[0] += 1
-                y = -float(depth) * 1.5
+                y = -float(depth) * 2.2
                 pos[node_id] = (x, y)
                 return x
 
@@ -74,10 +74,10 @@ class HuffmanVisualizer:
             elif right_x is not None:
                 x = right_x
             else:
-                x = float(leaf_counter[0])
+                x = float(leaf_counter[0]) * 2.2
                 leaf_counter[0] += 1
 
-            y = -float(depth) * 1.5
+            y = -float(depth) * 2.2
             pos[node_id] = (x, y)
             return x
 
@@ -97,10 +97,10 @@ class HuffmanVisualizer:
         """Plots the tree with color-coded leaf and internal nodes without overlapping."""
         graph, pos, labels, edge_labels = cls.build_networkx_graph(root, max_depth=max_depth)
 
-        # Scale figure width to match number of nodes
+        # Scale figure width to match number of nodes with generous horizontal spacing
         num_nodes = len(pos)
-        fig_w = max(13, int(num_nodes * 0.75))
-        plt.figure(figsize=(fig_w, 8))
+        fig_w = max(16, int(num_nodes * 1.1))
+        plt.figure(figsize=(fig_w, 9))
         plt.title(title, fontsize=14, fontweight="bold", pad=20)
 
         # Classify nodes for visual styling

@@ -1,13 +1,26 @@
 # Optimal Prefix Codes and Data Compression Using Huffman Coding
 
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Explorer-PrefixOptima-success?style=for-the-badge&logo=github)](https://smoothnoperator.github.io/Dmgt-Huffman-Coding/)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests: Passing](https://img.shields.io/badge/tests-passing-brightgreen.svg)]()
+[![Tests: Passing](https://img.shields.io/badge/tests-23%20passing-brightgreen.svg)]()
 [![Course: DMGT](https://img.shields.io/badge/Course-DMGT-orange.svg)]()
 
 > **Discrete Mathematics and Graph Theory (DMGT) — Experiential Learning Project**  
 > **Programme:** Blockchain Technology (CSE-BCT)  
-> **Topic 14:** Optimal Prefix Codes and Data Compression Using Huffman Coding
+> **Topic 14:** Optimal Prefix Codes and Data Compression Using Huffman Coding  
+> 🔗 **Live Web Application:** [https://smoothnoperator.github.io/Dmgt-Huffman-Coding/](https://smoothnoperator.github.io/Dmgt-Huffman-Coding/)
+
+---
+
+## 🌐 Live Interactive Web Explorer
+Experience the full visual suite online without any setup: **[Launch PrefixOptima Live](https://smoothnoperator.github.io/Dmgt-Huffman-Coding/)**
+
+1. **🌳 Studio Walk**: Interactive bit-by-bit dynamic tree walk decoder with real-time audio bit frequency synthesizer.
+2. **🌲 Dual Tree Comparator**: Synchronized Huffman vs. Shannon-Fano comparative analysis with simultaneous root-to-leaf path tracing.
+3. **💥 Fault Injector Lab**: 1-click single-bit shock, burst noise, and random BER error propagation simulation comparing prefix code desynchronization against fixed 8-bit ASCII.
+4. **📐 Graph Invariants**: Real-time validation of Kraft-McMillan inequality ($\sum 2^{-L_i} = 1.0$), Gallager bounds, length variance, and Euler's handshaking degree sum ($\sum \deg(v) = 2|E|$).
+5. **👣 Heap Simulator**: Step-by-step min-heap priority queue interactive visualization with auto-play assembly, continuous speed slider, and $\mathcal{O}(|\Sigma| \log |\Sigma|)$ complexity proofs.
 
 ---
 
@@ -91,8 +104,8 @@ Evaluation across 4 domains (all datasets $> 1000$ symbols, exceeding the $\ge 3
 
 ### 1. Clone & Install Dependencies
 ```bash
-git clone https://github.com/<your-username>/<your-repo-name>.git
-cd <your-repo-name>
+git clone https://github.com/SmoothnOperator/Dmgt-Huffman-Coding.git
+cd Dmgt-Huffman-Coding
 pip install -r requirements.txt
 ```
 

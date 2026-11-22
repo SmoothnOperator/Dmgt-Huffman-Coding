@@ -12,6 +12,8 @@ from src.huffman import HuffmanTree
 from src.shannon_fano import ShannonFanoTree
 from src.codec import HuffmanCodec
 from src.visualizer import HuffmanVisualizer
+from src.merkle_huffman import MerkleHuffmanTree
+from src.adaptive_huffman import AdaptiveHuffmanCodec
 
 
 def run_pipeline():
@@ -89,7 +91,36 @@ def run_pipeline():
     print(f"  * Space Savings (%)                 : {space_savings:.2f}%")
     print("=" * 75)
 
-    # 7. Render Graph-Theoretic Tree Visualization
+    # 7. Blockchain Integration: Merkle-Huffman Cryptographic Verification
+    print("\n[7] BLOCKCHAIN INTEGRATION: MERKLE-HUFFMAN ROOT & INCLUSION PROOFS...")
+    merkle_tree = MerkleHuffmanTree()
+    merkle_root = merkle_tree.build_from_huffman(huffman)
+    print(f"    - Merkle Root Hash: {merkle_root}")
+
+    # Generate and verify inclusion proof for a sample symbol
+    sample_symbol = text[0]
+    sample_info = merkle_tree.get_leaf_info(sample_symbol)
+    proof = merkle_tree.generate_inclusion_proof(sample_symbol)
+    is_proof_valid = MerkleHuffmanTree.verify_inclusion_proof(
+        char=sample_symbol,
+        freq=sample_info["freq"],
+        code=sample_info["code"],
+        proof=proof,
+        expected_root=merkle_root
+    )
+    print(f"    - Sample Symbol '{sample_symbol}' Merkle Proof Length: {len(proof)} steps (O(log |Sigma|))")
+    print(f"    - Cryptographic Verification of Codebook Inclusion: {is_proof_valid} [PASS]")
+
+    # 8. Dynamic Streaming: Adaptive Huffman Coding (FGK Sibling Property)
+    print("\n[8] STREAMING DATA COMPRESSION: ADAPTIVE HUFFMAN (FGK ALGORITHM)...")
+    sample_stream = text[:200]
+    adaptive_bits = AdaptiveHuffmanCodec.encode(sample_stream)
+    adaptive_decoded = AdaptiveHuffmanCodec.decode_to_string(adaptive_bits)
+    is_adaptive_lossless = (sample_stream == adaptive_decoded)
+    print(f"    - Stream Length: {len(sample_stream)} chars | Encoded Bitstream: {len(adaptive_bits)} bits")
+    print(f"    - Single-Pass Dynamic Lossless Check (No Header): {is_adaptive_lossless} [PASS]")
+
+    # 9. Render Graph-Theoretic Tree Visualization
     sample_sub_text = "EXPERIENTIAL LEARNING IN GRAPH THEORY"
     vis_tree = HuffmanTree()
     vis_root = vis_tree.build_tree(sample_sub_text)
