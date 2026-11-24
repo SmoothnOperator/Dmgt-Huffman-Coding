@@ -590,25 +590,37 @@
           <div class="flex items-center gap-2">
             <span class="text-xs sm:text-sm font-bold uppercase text-slate-900 tracking-wide">Input Source Data</span>
             <span id="char-count" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono font-bold">11 characters</span>
-            <span class="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold flex items-center gap-1">🔒 Locked to Benchmark Datasets</span>
+            <span id="input-mode-badge" class="px-2.5 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-[11px] font-bold flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              <span>Preset: ABRACADABRA</span>
+            </span>
           </div>
 
-          <!-- Dataset Presets -->
+          <!-- Dataset Presets & Custom Input Pill -->
           <div class="flex flex-wrap items-center gap-2 text-xs font-medium">
-            <span class="text-slate-500 font-semibold">4 Core Datasets:</span>
-            <button id="preset-btn-abracadabra" onclick="loadPreset('abracadabra')" class="preset-pill px-3 py-1 rounded-lg bg-blue-600 border border-blue-600 text-white font-bold transition shadow-xs">ABRACADABRA</button>
+            <span class="text-slate-500 font-semibold">Presets & Custom:</span>
+            <button id="preset-btn-abracadabra" onclick="loadPreset('abracadabra')" class="preset-pill px-3 py-1 rounded-lg bg-blue-600 border border-blue-600 text-white font-bold transition shadow-xs scale-105">ABRACADABRA</button>
             <button id="preset-btn-dna" onclick="loadPreset('dna')" class="preset-pill px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold transition">Genomic DNA (T4)</button>
             <button id="preset-btn-english" onclick="loadPreset('english')" class="preset-pill px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold transition">English Corpus</button>
             <button id="preset-btn-code" onclick="loadPreset('code')" class="preset-pill px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold transition">Python Code</button>
+            <button id="preset-btn-custom" onclick="focusCustomInput()" class="preset-pill px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold transition flex items-center gap-1">
+              <span>✏️ Custom Input</span>
+            </button>
           </div>
         </div>
 
         <div>
-          <!-- Text Input Area (Readonly Locked for Presentation) -->
+          <!-- Text Input Area (Editable Live Graph Generator) -->
           <div class="relative">
-            <textarea id="input-text" rows="3" readonly class="w-full bg-slate-100 text-slate-800 text-sm font-mono rounded-xl p-3.5 border-2 border-slate-200 focus:outline-none cursor-default select-all transition shadow-inner" placeholder="Benchmark dataset content...">ABRACADABRA</textarea>
-            <div class="absolute bottom-2.5 right-3 flex items-center gap-1 px-2 py-0.5 rounded bg-white/90 border border-slate-300 shadow-2xs text-[10px] text-slate-500 font-bold uppercase tracking-wider pointer-events-none">
-              <span>🔒 Read-Only Benchmark Data</span>
+            <textarea id="input-text" rows="3" class="w-full bg-white text-slate-900 text-sm font-mono rounded-xl p-3.5 border-2 border-slate-300 hover:border-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15 focus:outline-none transition shadow-inner resize-y placeholder:text-slate-400" placeholder="Type, edit, or paste your custom input data here (the Huffman tree and all metrics will update live)...">ABRACADABRA</textarea>
+            <div class="absolute bottom-2.5 right-3 flex items-center gap-1.5">
+              <button type="button" onclick="clearInputText()" class="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 border border-slate-300 shadow-2xs text-[11px] font-bold transition flex items-center gap-1 cursor-pointer" title="Clear text box to write new input">
+                <span>✕ Clear</span>
+              </button>
+              <div id="live-indicator-badge" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 shadow-2xs text-[11px] text-blue-700 font-bold uppercase tracking-wider pointer-events-none">
+                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                <span id="input-source-label">Preset: ABRACADABRA</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1603,24 +1615,83 @@
 
     let currentPresetKey = 'abracadabra';
 
+    function focusCustomInput() {
+      const mainInput = document.getElementById('input-text');
+      if (mainInput) {
+        mainInput.focus();
+        mainInput.select();
+      }
+    }
+
+    function clearInputText() {
+      const mainInput = document.getElementById('input-text');
+      if (mainInput) {
+        mainInput.value = '';
+        mainInput.focus();
+        recomputeAll();
+      }
+    }
+
+    function updatePresetPillsState(currentVal) {
+      let matchedKey = null;
+      for (const [k, v] of Object.entries(PRESETS)) {
+        if (v === currentVal) {
+          matchedKey = k;
+          break;
+        }
+      }
+
+      const keys = ['abracadabra', 'dna', 'english', 'code'];
+      keys.forEach(k => {
+        const btn = document.getElementById(`preset-btn-${k}`);
+        if (btn) {
+          if (k === matchedKey) {
+            btn.className = "preset-pill px-3 py-1 rounded-lg bg-blue-600 border border-blue-600 text-white font-bold transition shadow-xs scale-105";
+          } else {
+            btn.className = "preset-pill px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold transition";
+          }
+        }
+      });
+
+      const customBtn = document.getElementById('preset-btn-custom');
+      if (customBtn) {
+        if (!matchedKey && currentVal && currentVal.length > 0) {
+          customBtn.className = "preset-pill px-3 py-1 rounded-lg bg-emerald-600 border border-emerald-600 text-white font-bold transition shadow-xs scale-105 flex items-center gap-1";
+        } else {
+          customBtn.className = "preset-pill px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold transition flex items-center gap-1";
+        }
+      }
+
+      const badge = document.getElementById('input-mode-badge');
+      const label = document.getElementById('input-source-label');
+      if (badge) {
+        if (matchedKey) {
+          const names = {
+            abracadabra: "ABRACADABRA",
+            dna: "Genomic DNA",
+            english: "English Corpus",
+            code: "Python Code"
+          };
+          badge.className = "px-2.5 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-[11px] font-bold flex items-center gap-1.5";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-500"></span><span>Preset: ${names[matchedKey] || matchedKey}</span>`;
+          if (label) label.innerText = `Preset: ${names[matchedKey] || matchedKey}`;
+        } else if (currentVal && currentVal.length > 0) {
+          badge.className = "px-2.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold flex items-center gap-1.5";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>Custom Data Live Mode</span>`;
+          if (label) label.innerText = `Custom Input (Live Tree)`;
+        } else {
+          badge.className = "px-2.5 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600 text-[11px] font-bold flex items-center gap-1.5";
+          badge.innerHTML = `<span>✍️ Ready for Input</span>`;
+          if (label) label.innerText = `Waiting for input`;
+        }
+      }
+    }
+
     function loadPreset(key) {
       if (PRESETS[key]) {
         currentPresetKey = key;
         const mainInput = document.getElementById('input-text');
         if (mainInput) mainInput.value = PRESETS[key];
-
-        // Update active highlight on preset pills
-        ['abracadabra', 'dna', 'english', 'code'].forEach(k => {
-          const btn = document.getElementById(`preset-btn-${k}`);
-          if (btn) {
-            if (k === key) {
-              btn.className = "preset-pill px-3 py-1 rounded-lg bg-blue-600 border border-blue-600 text-white font-bold transition shadow-xs scale-105";
-            } else {
-              btn.className = "preset-pill px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold transition";
-            }
-          }
-        });
-
         recomputeAll();
       }
     }
@@ -1726,9 +1797,17 @@
     }
 
     function buildShannonFanoTree(freqMap) {
-      const sorted = Object.entries(freqMap).sort((a, b) => b[1] - a[1]);
+      const sorted = Object.entries(freqMap || {}).sort((a, b) => b[1] - a[1]);
       const codes = {};
       sorted.forEach(([ch]) => codes[ch] = "");
+
+      if (sorted.length === 0) return { root: null, codes: {} };
+      if (sorted.length === 1) {
+        codes[sorted[0][0]] = "0";
+        const leaf = new Node(sorted[0][0], sorted[0][1]);
+        const root = new Node(null, sorted[0][1], leaf, null);
+        return { root, codes };
+      }
 
       function buildSubTree(symbolList) {
         if (symbolList.length === 0) return null;
@@ -1794,8 +1873,66 @@
 
     function recomputeAll() {
       const text = document.getElementById('input-text').value;
-      document.getElementById('char-count').innerText = `${text.length} chars`;
-      if (!text || text.length === 0) return;
+      const countEl = document.getElementById('char-count');
+      if (countEl) countEl.innerText = `${text.length} characters`;
+
+      updatePresetPillsState(text);
+
+      if (!text || text.length === 0) {
+        currentTree = null;
+        currentHistory = [];
+        currentCodes = {};
+        currentFreqs = {};
+        currentStepIdx = 0;
+        currentBitstring = "";
+
+        // Reset KPI cards
+        ['metric-entropy', 'metric-avg-len', 'metric-redundancy', 'metric-kraft'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.innerText = "0.000";
+        });
+        const sfComp = document.getElementById('metric-sf-compare');
+        if (sfComp) sfComp.innerText = "SF: 0.000 b/sym";
+        const rat = document.getElementById('metric-ratio');
+        if (rat) rat.innerText = "0.00 : 1";
+        const sav = document.getElementById('metric-savings');
+        if (sav) sav.innerText = "0.0%";
+
+        const alphaBadge = document.getElementById('alphabet-size-badge');
+        if (alphaBadge) alphaBadge.innerText = "|Σ| = 0 symbols";
+        const specSummary = document.getElementById('spectrum-summary');
+        if (specSummary) specSummary.innerText = "0 distinct symbols (N=0)";
+
+        const bar = document.getElementById('freq-spectrum-bar');
+        if (bar) bar.innerHTML = '<div class="w-full text-center text-[11px] text-slate-400 py-0.5">Type custom characters above to build frequency spectrum</div>';
+
+        const tbody = document.getElementById('codebook-tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400 font-sans">Type custom text above or click any preset to generate the codebook.</td></tr>';
+
+        // SVGs
+        const svg = document.getElementById('tree-svg');
+        if (svg) svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#94a3b8" font-size="15" font-family="sans-serif" font-weight="600">✍️ Type custom text in the box above or choose a preset to construct the Huffman tree.</text>';
+
+        const huffSvg = document.getElementById('dual-huffman-svg');
+        if (huffSvg) huffSvg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#94a3b8" font-size="13" font-family="sans-serif">Type text to generate Huffman tree</text>';
+        const sfSvg = document.getElementById('dual-sf-svg');
+        if (sfSvg) sfSvg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#94a3b8" font-size="13" font-family="sans-serif">Type text to generate Shannon-Fano tree</text>';
+
+        const bitEl = document.getElementById('pipe-bitstring');
+        if (bitEl) bitEl.innerText = "None (0 bits)";
+        const hexEl = document.getElementById('pipe-hex');
+        if (hexEl) hexEl.innerText = "00";
+        const bitCountEl = document.getElementById('pipe-bits-count');
+        if (bitCountEl) bitCountEl.innerText = "0 bits";
+        const byteCountEl = document.getElementById('pipe-bytes-count');
+        if (byteCountEl) byteCountEl.innerText = "0 bytes";
+
+        bitFlipArray = [];
+        renderFaultGrid();
+        resetWalkAnimation();
+        updateStepperUI();
+        return;
+      }
 
       const N = text.length;
       const { root, history, codes, freqs } = buildHuffmanWithHistory(text);
@@ -2133,7 +2270,10 @@
         }
         assignPositions(node.left, depth + 1);
         assignPositions(node.right, depth + 1);
-        node.xRank = ((node.left ? node.left.xRank : 0) + (node.right ? node.right.xRank : 0)) / 2;
+        let count = 0, sum = 0;
+        if (node.left) { sum += node.left.xRank; count++; }
+        if (node.right) { sum += node.right.xRank; count++; }
+        node.xRank = count > 0 ? sum / count : 0;
       }
       assignPositions(treeRoot, 0);
 
@@ -3366,7 +3506,10 @@
         }
         assignPositions(node.left, depth + 1);
         assignPositions(node.right, depth + 1);
-        node.xRank = ((node.left ? node.left.xRank : 0) + (node.right ? node.right.xRank : 0)) / 2;
+        let count = 0, sum = 0;
+        if (node.left) { sum += node.left.xRank; count++; }
+        if (node.right) { sum += node.right.xRank; count++; }
+        node.xRank = count > 0 ? sum / count : 0;
       }
       assignPositions(currentTree, 0);
 
@@ -3655,7 +3798,19 @@
     }
 
     function updateStepperUI() {
-      if (!currentHistory || currentHistory.length === 0) return;
+      if (!currentHistory || currentHistory.length === 0) {
+        const forestSvg = document.getElementById('forest-svg');
+        if (forestSvg) forestSvg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#94a3b8" font-size="14" font-family="sans-serif">Type text to initialize min-heap forest</text>';
+        const stepInd = document.getElementById('step-indicator');
+        if (stepInd) stepInd.innerText = 'Step 0 / 0';
+        const stepDesc = document.getElementById('step-action-desc');
+        if (stepDesc) stepDesc.innerHTML = 'Waiting for input text...';
+        const chips = document.getElementById('heap-queue-chips');
+        if (chips) chips.innerHTML = '<span class="text-xs text-slate-400">Empty Priority Queue</span>';
+        const stepperInp = document.getElementById('stepper-custom-input');
+        if (stepperInp) stepperInp.value = '';
+        return;
+      }
       const totalSteps = currentHistory.length - 1;
       currentStepIdx = Math.max(0, Math.min(currentStepIdx, totalSteps));
 
@@ -4075,9 +4230,12 @@
       }
     }
 
-    document.getElementById('input-text').addEventListener('input', () => {
-      recomputeAll();
-    });
+    const mainInputEl = document.getElementById('input-text');
+    if (mainInputEl) {
+      mainInputEl.addEventListener('input', () => recomputeAll());
+      mainInputEl.addEventListener('paste', () => setTimeout(recomputeAll, 20));
+      mainInputEl.addEventListener('change', () => recomputeAll());
+    }
 
     window.onload = () => {
       const speedSelect = document.getElementById('walk-speed');
